@@ -23,8 +23,19 @@
                                :job (random-job)})))))
 
 
+(defn empty-link
+  "Make an empty link thing for each entry with the text inside"
+  [entry]
+  (let [x (or (:name entry) (:job entry))]
+    [:a {:href x
+         :on-click #(js/alert (str "You clicked on " x))} x])
+  )
+
+
 (defn home-page []
-  (let [controls {:cols [{:valfn :name
+  (let [controls {:page-num (constantly 1)
+                  :page-amount (constantly 5)
+                  :cols [{:valfn empty-link
                           :headline "Name"}
                          {:valfn :job
                           :headline "Job"}]} ]

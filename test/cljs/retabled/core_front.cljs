@@ -4,41 +4,37 @@
             [retabled.ajax :refer [load-interceptors!]]
             [retabled.shared-test :refer [page-template] :as shared]
             [retabled.routes :as routes]
-            [retabled.status :as status]
-            [retabled.application :as app]
+            [retabled.core :as ret]
             [secretary.core :as secretary :include-macros true]
             [accountant.core :as accountant]
-            [retabled.review-front :as review]
             [ajax.core :refer [GET POST]]))
 
-(defn home-page []
-  [page-template {:jumbo-title "International Study Programs"
-                  :jumbo-subtitle "Dashboard"
-                  :contents [:div.dashboard.text-center
-                             [:div.apply
-                              [:a {:href (routes/applicant-route)
-                                   :data-toggle "tooltip"
-                                   :data-placement "top"
-                                   :alt "Propose an International Study Program"
-                                   :title "Propose an International Study Program"}
-                               [:i.fa.fa-pencil-square-o]
-                               [:span "Propose"]]]
-                             ;; [:div.review
-                             ;;  [:a {:href (routes/status-route)
-                             ;;       :data-toggle "tooltip"
-                             ;;       :data-placement "top"
-                             ;;       :title "Your Proposal Applications"
-                             ;;       :alt "Review Your Proposal Applications"}
-                             ;;   [:i.fa.fa-envelope-open-o]
-                             ;;   [:span "Status"]
-                             ;;   ]]
-                             ]}])
+(defn random-job
+  "generate a random job"
+  []
+  (let [jobs ["programmer" "Dog catcher" "pizza deliverer" "pro-gamer"] ]
+    (rand-nth jobs)))
 
+
+(def table-data
+  (let [A (atom 0)]
+    (into [] (repeatedly 15 (fn []
+                              {:name (str "John Doe " (swap! A inc))
+                               :job (random-job)})))))
+
+
+(defn home-page []
+  (let [controls {:cols [{:valfn :name
+                          :headline "Name"}
+                         {:valfn :job
+                          :headline "Job"}]} ]
+    [page-template {:jumbo-title "Retabled"
+                    :contents [:div.dashboard.text-center
+                               (ret/table controls table-data)
+                               ]}]))
 
 (def pages
-  {:home #'app/app-page
-   :review #'review/app-page
-   :app #'app/app-page})
+  {:home #'home-page})
 
 (defn page []
   [(pages (session/get :page))])

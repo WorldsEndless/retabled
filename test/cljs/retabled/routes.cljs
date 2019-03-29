@@ -11,19 +11,6 @@
 (secretary/defroute home "/" []
   (session/put! :page :home))
 
-(secretary/defroute applicant-route "/applicant" []
-  (session/put! :page :app))
-
-;; (secretary/defroute status-route "/status" []
-;;   (session/put! :page :status))
-
-(secretary/defroute review-route "/review" []
-  (session/put! :page :review))
-
-(secretary/defroute edit-route "/application/edit/:application" [application]
-  (session/put! :application (js/parseInt application))
-  (session/put! :page :update))
-
 ;; -------------------------
 ;; History
 ;; must be called after routes have been defined

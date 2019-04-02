@@ -42,6 +42,8 @@
   [{:valfn (fn [entry] "Retrieves the value of this cell from `entry`")
     :headline "The string to display in table header"
     :css-class-fn (fn [entry] "Produces class (str or vector) to be applied to field/column")
+    :page-num (fn [] "Function to get the current page num, from an atom or reframe, etc")
+    :page-amount (fn [] "Function to get the number of entries per page")
     }])
 
 
@@ -81,11 +83,20 @@
                     [:td {:class (css-class-fn e)}(valfn e)]))))))
 
 
+(defn curate-entries [controls entries]
+  (let [{:keys [page-num page-amount]} controls]
+    (-> entries
+        ;; filtering
+        ;; sorting
+        ;; paging
+        )))
+
 (defn table
   "Generate a table from `entries` according to headers and getter-fns in `controls`"
   [controls entries]
-  [:table
-   (generate-theads controls)
-   (generate-rows controls entries)
-   ])
+  (let [entries (curate-entries controls entries) ]
+    [:table
+     (generate-theads controls)
+     (generate-rows controls entries)
+     ]))
 

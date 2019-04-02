@@ -3,6 +3,40 @@
             #?(:cljs [reagent.core :refer [atom]])
             [clojure.string :as str]))
 
+(defn generate-filter-fn
+  "Produce the function which compares a filter-map to a map and deems it good or not. If a :key in `filter-map` doesn't exist when filtering `filterable-map`, the filterable map will fail this function."
+  [filter-map]
+  (fn [filterable-map]
+    (every? some?
+            (for [[k f] filter-map
+                  :let [field-filter-fn (cond 
+                                          (fn? f) f
+                                          (string? f) (partial re-find (re-pattern (str f)))
+                                          (int? f) #(= f %)
+                                          :else (throw (ex-info "Invalid filter-fn given to generate-filter-fn" {:received {k f}})))]]
+              (when-let [filterable-value (k filterable-map)]
+                (field-filter-fn filterable-value))))))
+
+
+(defn filter-by-map
+  "Filter a collection of maps by a filter-map, where the filter map specifies the columns and the value to filter them by.
+
+  Strings will be made into basic regexp."
+  [filter-map map-coll]
+  (let [filter-fn (generate-filter-fn filter-map)
+        results  (filter filter-fn map-coll)]
+    results))
+
+#_(do (def map-coll [{:alpha "abcd"
+                    :num "213"}
+                   {:alpha "cnsnnts"
+                    :num "11"}
+                   {:alpha "oyoe"}])
+
+    (def filter-map {:alpha "cn"})
+    ["Filtered map is: "
+     (filter-by-map filter-map map-coll)])
+
 (def col-map-help
   "Possible values of col-maps within `:cols` of control-map "
   [{:valfn (fn [entry] "Retrieves the value of this cell from `entry`")

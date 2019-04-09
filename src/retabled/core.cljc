@@ -3,6 +3,29 @@
             #?(:cljs [reagent.core :refer [atom]])
             [clojure.string :as str]))
 
+(def col-map-help
+  "Possible values of col-maps within `:cols` of control-map "
+  [{:valfn (fn [entry] "Retrieves the value of this cell from `entry`")
+    :displayfn (fn [valfn-value] "Produces the display from result `(valfn entry)`. 
+                                  Default `identity`" )
+    :headline "The string to display in table header"
+    :css-class-fn (fn [entry] "Produces class (str or vector) to be applied to field/column")
+    :page-num (fn [] "Function to get the current page num, from an atom or reframe, etc")
+    :page-amount (fn [] "Function to get the number of entries per page")
+    :filter "If truthy displays a filter-bar that will perform on-change filtering on this column."
+    }])
+
+
+(def control-map-help
+  "The possible values of a control-map for a table, which should be a
+  sequence of maps where each map corresponds to one column of the table."
+  {:row-class-fn (fn [entry] "Provides the class (str or vector) of a :tr, given entry")
+   :cols col-map-help
+   
+   })
+
+(def FILTER-MAP (atom {}))
+
 (defn generate-filter-fn
   "Produce the function which compares a filter-map to a map and deems it good or not. If a :key in `filter-map` doesn't exist when filtering `filterable-map`, the filterable map will fail this function."
   [filter-map]
@@ -24,7 +47,7 @@
   Strings will be made into basic regexp."
   [filter-map map-coll]
   (let [filter-fn (generate-filter-fn filter-map)
-        results  (filter filter-fn map-coll)]
+        results (filter filter-fn map-coll)]
     results))
 
 #_(do (def map-coll [{:alpha "abcd"
@@ -37,24 +60,12 @@
     ["Filtered map is: "
      (filter-by-map filter-map map-coll)])
 
-(def col-map-help
-  "Possible values of col-maps within `:cols` of control-map "
-  [{:valfn (fn [entry] "Retrieves the value of this cell from `entry`")
-    :headline "The string to display in table header"
-    :css-class-fn (fn [entry] "Produces class (str or vector) to be applied to field/column")
-    :page-num (fn [] "Function to get the current page num, from an atom or reframe, etc")
-    :page-amount (fn [] "Function to get the number of entries per page")
-    }])
-
-
-(def control-map-help
-  "The possible values of a control-map for a table, which should be a
-  sequence of maps where each map corresponds to one column of the table."
-  {:row-class-fn (fn [entry] "Provides the class (str or vector) of a :tr, given entry")
-   :cols col-map-help
-   
-   })
-
+(defn gen-filter
+  "Generate an input meant to filter a column"
+  [col-map]
+  (let [id (shared/idify (:headline col-map))]
+    [:input.filter {:id (str id "_filter")
+                    :on-change #(swap! FILTER-MAP assoc (:valfn col-map) (shared/get-value-from-change %))}]))
 
 (defn atom?
   "ducktype an atom as something dereferable"
@@ -67,26 +78,30 @@
   [controls]
   [:thead
    (into [:tr]
-         (for [c (:cols controls) :let [h (:headline c)]]
-           [:th h]))])
+         (for [c (:cols controls) :let [h (:headline c)
+                                        fi (when (:filter c) (gen-filter c))]]
+           [:th fi h]))])
 
 (defn generate-rows
   "Generate all the rows of the table from `entries`, according to `controls`"
   [controls entries]
-  (let [{:keys [valfn row-class-fn cols]
+  (let [{:keys [row-class-fn cols]
          :or {row-class-fn (constantly "row")}} controls ]
     (into [:tbody]
           (for [e entries :let [tr [:tr {:class (row-class-fn e)}]]]
             (into tr
-                  (for [c cols :let [{:keys [valfn css-class-fn]
-                                      :or {css-class-fn (constantly "field")}} c]]
-                    [:td {:class (css-class-fn e)}(valfn e)]))))))
+                  (for [c cols :let [{:keys [valfn css-class-fn displayfn]
+                                      :or {css-class-fn (constantly "field")
+                                           displayfn identity}} c]]
+                    [:td {:class (css-class-fn e)}(-> e valfn displayfn)]))))))
 
 
 (defn curate-entries [controls entries]
-  (let [{:keys [page-num page-amount]} controls]
-    (-> entries
-        ;; filtering
+  (let [{:keys [page-num page-amount]} controls
+        filtering #(cond->> %
+                     (not-empty @FILTER-MAP) (filter-by-map @FILTER-MAP))]
+    (->> entries
+         filtering
         ;; sorting
         ;; paging
         )))

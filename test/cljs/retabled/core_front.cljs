@@ -25,18 +25,22 @@
 
 (defn empty-link
   "Make an empty link thing for each entry with the text inside"
-  [entry]
-  (let [x (or (:name entry) (:job entry))]
-    [:a {:href x
-         :on-click #(js/alert (str "You clicked on " x))} x])
-  )
+  [val]
+  [:a {:href val
+       :on-click #(js/alert (str "You clicked on " val))} val])
 
+(defn my-valfn
+  "name or job"
+  [entry]
+  (:name entry (:job entry)))
 
 (defn home-page []
   (let [controls {:page-num (constantly 1)
                   :page-amount (constantly 5)
-                  :cols [{:valfn empty-link
-                          :headline "Name"}
+                  :cols [{:valfn my-valfn
+                          :displayfn empty-link
+                          :headline "Name"
+                          :filter true}
                          {:valfn :job
                           :headline "Job"}]} ]
     [page-template {:jumbo-title "Retabled"

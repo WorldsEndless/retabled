@@ -5,6 +5,11 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.9.0"]]
   :source-paths ["src"]
+  :garden {:builds [{:id "style"
+                     :source-path "test/clj/retabled/styles"
+                     :stylesheet retabled.styles.main/main
+                     :compiler {:output-to "test/resources/public/css/style.css"
+                                :pretty-print? true}}]}
   :profiles {:dev {:jvm-opts ["-server" "-Dconf=.lein-env"]
                    :resource-paths ["test/resources" "test/target/cljsbuild"]
                    :target-path "test/target/"
@@ -17,11 +22,7 @@
                    {:http-server-root "public"
                     :nrepl-port 7002
                     :css-dirs ["test/resources/public/css"]}
-                   :garden {:builds [{:id "style"
-                                      :source-path "src/clj/retabled/styles"
-                                      :stylesheet retabled.styles.main/main
-                                      :compiler {:output-to "test/resources/public/css/style.css"
-                                                 :pretty-print? true}}]}
+                   
                    :dependencies [[cheshire "5.8.1"]
                                   [clj-http "3.9.1"]
                                   [clj-json "0.5.3"]

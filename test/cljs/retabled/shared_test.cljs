@@ -12,10 +12,6 @@
 (def CONTEXT (str js/context))
 (defonce text-size 25)
 
-(def ROWS (r/atom {}))
-(def *INSTITUTIONS* (r/atom nil))
-(def *LANGUAGES* (r/atom nil))
-
 (defn go-to [url &[query]]
   (accountant/navigate! url query))
 

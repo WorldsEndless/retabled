@@ -19,11 +19,13 @@
   sequence of maps where each map corresponds to one column of the table."
   {:row-class-fn (fn [entry] "Provides the class (str or vector) of a :tr, given entry")
    :cols col-map-help
-   :paging {:get-current-screen-fn (fn [] "Get the current screen num (0-based), from an atom or reframe, etc")
-            :set-current-screen-fn (fn [n] "Set current screen num. Default 0.")
-            :get-amount-fn (fn [] "Get the number of entries visible per screen")
-            :set-amount-fn (fn [n] "Set number of entries visible per screen. Default 5.")}
-   })
+   :paging {:simple "If truthy, use a local atom and default setters and getters without bothering with anything else defined in `:paging`. "
+            :get-current-screen (fn [] "Get the current screen num (0-based), from an atom or reframe, etc")
+            :set-current-screen (fn [n] "Set current screen num. Default 0.")
+            :get-last-screen (fn [] "Get the last screen num (0-based), from an atom or reframe, etc")
+            :set-last-screen (fn [n] "Set last screen num.")
+            :get-amount (fn [] "Get the number of entries visible per screen")
+            :set-amount (fn [n] "Set number of entries visible per screen. Default 5.")}})
 
 (def FILTER-MAP (atom {}))
 (def SORT (atom {:selected nil
@@ -55,16 +57,6 @@
   (let [filter-fn (generate-filter-fn filter-map)
         results (filter filter-fn map-coll)]
     results))
-
-#_(do (def map-coll [{:alpha "abcd"
-                    :num "213"}
-                   {:alpha "cnsnnts"
-                    :num "11"}
-                   {:alpha "oyoe"}])
-
-    (def filter-map {:alpha "cn"})
-    ["Filtered map is: "
-     (filter-by-map filter-map map-coll)])
 
 (defn gen-filter
   "Generate an input meant to filter a column"
@@ -196,9 +188,9 @@
 
 (defn curate-entries [paging-controls entries]
   (->> entries
+       (paging paging-controls)
        filtering
-       sorting
-       (paging paging-controls)))
+       sorting))
 
 (defn table
   "Generate a table from `entries` according to headers and getter-fns in `controls`"

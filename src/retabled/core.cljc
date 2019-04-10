@@ -10,8 +10,6 @@
                                   Default `identity`" )
     :headline "The string to display in table header"
     :css-class-fn (fn [entry] "Produces class (str or vector) to be applied to field/column")
-    :paging {:page-numfn (fn [] "Function to get the current page num (0-based), from an atom or reframe, etc")
-             :page-amountfn (fn [] "Function to get the number of entries per page")}
     :filter "If truthy displays a filter-bar that will perform on-change filtering on this column."
     }])
 
@@ -21,7 +19,10 @@
   sequence of maps where each map corresponds to one column of the table."
   {:row-class-fn (fn [entry] "Provides the class (str or vector) of a :tr, given entry")
    :cols col-map-help
-   
+   :paging {:get-current-screen-fn (fn [] "Get the current screen num (0-based), from an atom or reframe, etc")
+            :set-current-screen-fn (fn [n] "Set current screen num. Default 0.")
+            :get-amount-fn (fn [] "Get the number of entries visible per screen")
+            :set-amount-fn (fn [n] "Set number of entries visible per screen. Default 5.")}
    })
 
 (def FILTER-MAP (atom {}))
@@ -106,28 +107,33 @@
                     fi (when (:filter c) (gen-filter c))]]
           [:th fi h])))
 
-(defn ^{:private true} render-page-controls
-  [controls]
-  (let [table-cols (-> controls :cols count)
-        current-screen-for-display (-> @PAGING :current-screen inc)
-        prevfn #(max (dec %) 0)
-        nextfn #(min (inc %) (-> @PAGING :last-screen))]
-    [:tr.page-controls-row
-     [:td.page-controls {:colSpan table-cols}
-      [:div.control.first [:a.control-label {:href "#" :on-click #(swap! PAGING assoc :current-screen 0)} "«"]]
-      [:div.control.prev [:a.control-label {:href "#" :on-click #(swap! PAGING update :current-screen prevfn)} "‹"]]
-      [:div.control.current-screen [:span.page-num current-screen-for-display]]
-      [:div.control.next [:a.control-label {:href "#" :on-click #(swap! PAGING update :current-screen nextfn)} "›"]]
-      [:div.control.last [:a.control-label {:href "#" :on-click #(swap! PAGING assoc :current-screen
-                                                                        (:last-screen @PAGING))} "»"]]]]))
+(defn ^{:private true} render-screen-controls
+  [{:as paging-controls
+    :keys [get-current-screen
+           get-amount
+           set-amount
+           set-current-screen
+           set-last-screen
+           get-last-screen]}]
+  (let [table-cols 3;(-> controls :cols count)
+        current-screen-for-display (inc (get-current-screen))
+        prevfn #(max (dec (get-current-screen)) 0)
+        nextfn #(min (inc (get-current-screen)) (get-last-screen))]
+    [:tr.screen-controls-row
+     [:td.screen-controls {:colSpan table-cols}
+      [:div.control.first [:a.control-label {:href "#" :on-click #(set-current-screen 0)} "«"]]
+      [:div.control.prev [:a.control-label {:href "#" :on-click #(set-current-screen (prevfn))} "‹"]]
+      [:div.control.current-screen [:span.screen-num current-screen-for-display]]
+      [:div.control.next [:a.control-label {:href "#" :on-click #(set-current-screen (nextfn))} "›"]]
+      [:div.control.last [:a.control-label {:href "#" :on-click #(set-current-screen (get-last-screen))} "»"]]]]))
 
 (defn generate-theads
   "generate the table headers"
-  [controls]
+  [controls paging-controls]
   [:thead
    (render-header-fields controls)
    (when (:paging controls)
-     (render-page-controls controls))])
+     (render-screen-controls paging-controls))])
 
 (defn generate-rows
   "Generate all the rows of the table from `entries`, according to `controls`"
@@ -157,28 +163,53 @@
       (sort-by f dir entries)
       entries)))
 
+(def DEFAULT-PAGE-ATOM (atom {:current-screen 0
+                              :last-screen 0
+                              :per-screen 5}))
+
+(defn default-paging
+  "Set up a local atom and define paging functions with reference to it"
+  []
+  (let [paging {:get-current-screen #(:current-screen @DEFAULT-PAGE-ATOM)
+                :set-current-screen #(do
+                                       (println "Setting current screen to:" %)
+                                       (swap! DEFAULT-PAGE-ATOM assoc :current-screen %))                
+                :get-amount #(:per-screen @DEFAULT-PAGE-ATOM)
+                :set-amount #(swap! DEFAULT-PAGE-ATOM assoc :per-screen %)
+                :get-last-screen #(:last-screen @DEFAULT-PAGE-ATOM)
+                :set-last-screen #(swap! DEFAULT-PAGE-ATOM assoc :last-screen %)}]
+    paging))
+
 (defn ^{:private true} paging
   "Limit view of entries to a given screen"
-  [entries]
-  (let [{:keys [per-screen current-screen]} @PAGING
-        parted-entries (partition per-screen entries)
+  [paging-controls entries]
+  (let [{:keys [get-current-screen
+                get-amount
+                set-amount
+                set-current-screen
+                set-last-screen
+                get-last-screen]} paging-controls
+        parted-entries (partition (get-amount) entries)
         max-screens (dec (count parted-entries))]
-    (swap! PAGING assoc :last-screen max-screens)
-    (nth parted-entries current-screen)))
+    (set-last-screen max-screens)
+    (nth parted-entries (get-current-screen))))
 
-(defn curate-entries [controls entries]
-  (let [{:keys [page-num page-amount]} controls]
-    (->> entries
-         filtering
-         sorting
-         paging)))
+(defn curate-entries [paging-controls entries]
+  (->> entries
+       filtering
+       sorting
+       (paging paging-controls)))
 
 (defn table
   "Generate a table from `entries` according to headers and getter-fns in `controls`"
   [controls entries]
-  (let [entries (curate-entries controls entries) ]
+  (let [paging-controls (if (get-in controls [:paging :simple])
+                 (default-paging)
+                 (:paging controls))
+        entries (curate-entries paging-controls entries)
+        ]
     [:table
-     (generate-theads controls)
+     (generate-theads controls paging-controls)
      (generate-rows controls entries)
      ]))
 

@@ -15,8 +15,8 @@
     [:&.sorting-by-this {:color "#000"}]
     [:&.ascending:after {:content "\"▲\""} ]
     [:&.descending:after {:content "\"▼\""} ]]
-   [:.page-controls-row
-    [:.page-controls
+   [:.screen-controls-row
+    [:.screen-controls
      [:div.control {:display "inline-block"
                     :padding-right (em 1)}]
      ]]])

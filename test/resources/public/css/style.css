@@ -13,3 +13,8 @@ thead .sortable.ascending:after {
 thead .sortable.descending:after {
   content: "▼";
 }
+
+thead .page-controls-row .page-controls div.control {
+  display: inline-block;
+  padding-right: 1em;
+}

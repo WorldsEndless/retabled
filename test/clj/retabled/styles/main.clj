@@ -15,7 +15,11 @@
     [:&.sorting-by-this {:color "#000"}]
     [:&.ascending:after {:content "\"▲\""} ]
     [:&.descending:after {:content "\"▼\""} ]]
-   ])
+   [:.page-controls-row
+    [:.page-controls
+     [:div.control {:display "inline-block"
+                    :padding-right (em 1)}]
+     ]]])
 
 (defstyles main
   {:vendors ["webkit" "moz" "o" "ms"]}

@@ -10,8 +10,8 @@
                                   Default `identity`" )
     :headline "The string to display in table header"
     :css-class-fn (fn [entry] "Produces class (str or vector) to be applied to field/column")
-    :page-num (fn [] "Function to get the current page num, from an atom or reframe, etc")
-    :page-amount (fn [] "Function to get the number of entries per page")
+    :paging {:page-numfn (fn [] "Function to get the current page num (0-based), from an atom or reframe, etc")
+             :page-amountfn (fn [] "Function to get the number of entries per page")}
     :filter "If truthy displays a filter-bar that will perform on-change filtering on this column."
     }])
 
@@ -27,6 +27,8 @@
 (def FILTER-MAP (atom {}))
 (def SORT (atom {:selected nil
                  :direction <}))
+(def PAGING (atom {:per-page 5
+                   :current-page 0}))
 
 (defn generate-filter-fn
   "Produce the function which compares a filter-map to a map and deems it good or not. If a :key in `filter-map` doesn't exist when filtering `filterable-map`, the filterable map will fail this function."
@@ -94,15 +96,34 @@
   (try (do (deref a) true)
        (catch #?(:clj Exception :cljs js/Error) _ false)))
 
+(defn ^{:private true} render-header-fields
+  [controls]
+  (into [:tr.table-headers]
+        (for [c (:cols controls)
+              :let [h  (cond->> (:headline c)
+                         (:sort c) (gen-sort c))
+                    fi (when (:filter c) (gen-filter c))]]
+          [:th fi h])))
+
+(defn ^{:private true} render-page-controls
+  [controls]
+  (let [table-cols (-> controls :cols count)]
+    [:tr.page-controls-row
+     [:td.page-controls {:colSpan table-cols}
+      [:div.control.first [:span.control-label "First"]]
+      [:div.control.prev [:span.control-label "Prev"]]
+      [:div.control.next [:span.control-label "Next"]]
+      [:div.control.last [:span.control-label "Last"]]]])
+  )
+
+
 (defn generate-theads
   "generate the table headers"
   [controls]
   [:thead
-   (into [:tr]
-         (for [c (:cols controls) :let [h  (cond->> (:headline c)
-                                            (:sort c) (gen-sort c))
-                                        fi (when (:filter c) (gen-filter c))]]
-           [:th fi h]))])
+   (render-header-fields controls)
+   (when (:paging controls)
+     (render-page-controls controls))])
 
 (defn generate-rows
   "Generate all the rows of the table from `entries`, according to `controls`"
@@ -132,13 +153,19 @@
       (sort-by f dir entries)
       entries)))
 
+(defn ^{:private true} paging
+  "Limit view of entries to a given page"
+  [entries]
+  (let [{:keys [per-page current-page]} @PAGING
+        parted-entries (partition per-page entries)]
+    (nth parted-entries current-page)))
+
 (defn curate-entries [controls entries]
   (let [{:keys [page-num page-amount]} controls]
     (->> entries
          filtering
          sorting
-        ;; paging
-        )))
+         paging)))
 
 (defn table
   "Generate a table from `entries` according to headers and getter-fns in `controls`"

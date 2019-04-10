@@ -37,6 +37,8 @@
 (defn home-page []
   (let [controls {:page-num (constantly 1)
                   :page-amount (constantly 5)
+                  :paging {:page-numfn (constantly 0)
+                           :page-amountfn (constantly 3)}
                   :cols [{:valfn my-valfn
                           :displayfn empty-link
                           :headline "Name"

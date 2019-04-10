@@ -24,7 +24,7 @@
   (hp/include-js  "https://cdn.byu.edu/byu-theme-components/latest/byu-theme-components.min.js"))
 
 (defn boiler-header [& [userinfo]]
-  [:head [:title "Humanities Undergraduate Grant Application"]
+  [:head [:title "Retabled"]
    (hp/include-css "//cloud.typography.com/75214/6517752/css/fonts.css")
    [:meta {:name "viewport"
            :content "width=device-width, initial-scale=1.0"}]

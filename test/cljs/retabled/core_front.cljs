@@ -40,8 +40,10 @@
                   :cols [{:valfn my-valfn
                           :displayfn empty-link
                           :headline "Name"
+                          :sort true
                           :filter true}
                          {:valfn :job
+                          :sort true
                           :headline "Job"}]} ]
     [page-template {:jumbo-title "Retabled"
                     :contents [:div.dashboard.text-center

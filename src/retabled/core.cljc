@@ -25,6 +25,8 @@
    })
 
 (def FILTER-MAP (atom {}))
+(def SORT (atom {:selected nil
+                 :direction <}))
 
 (defn generate-filter-fn
   "Produce the function which compares a filter-map to a map and deems it good or not. If a :key in `filter-map` doesn't exist when filtering `filterable-map`, the filterable map will fail this function."
@@ -67,6 +69,25 @@
     [:input.filter {:id (str id "_filter")
                     :on-change #(swap! FILTER-MAP assoc (:valfn col-map) (shared/get-value-from-change %))}]))
 
+(defn sort-click
+  "Select sort field; if sort field unchanged, sort direction"
+  [valfn]
+  (let [currently-selected (:selected @SORT)
+        swap-dir #(if (= <  %) > <)]
+    (if (not= currently-selected valfn)
+      (swap! SORT assoc :selected valfn)
+      (swap! SORT update :direction swap-dir))))
+
+(defn gen-sort
+  "Render the title as a link that toggles sorting on this column"
+  [c headline]
+  (let [sorting-this? (= (:valfn c) (:selected @SORT))
+        sc (condp = (:direction @SORT)
+             < "ascending"
+             > "descending")
+        classes (when sorting-this? ["sorting-by-this" sc])]
+    [:a.sortable {:class classes :href "#" :on-click #(sort-click (:valfn c))} headline]))
+
 (defn atom?
   "ducktype an atom as something dereferable"
   [a]
@@ -78,7 +99,8 @@
   [controls]
   [:thead
    (into [:tr]
-         (for [c (:cols controls) :let [h (:headline c)
+         (for [c (:cols controls) :let [h  (cond->> (:headline c)
+                                            (:sort c) (gen-sort c))
                                         fi (when (:filter c) (gen-filter c))]]
            [:th fi h]))])
 
@@ -95,14 +117,26 @@
                                            displayfn identity}} c]]
                     [:td {:class (css-class-fn e)}(-> e valfn displayfn)]))))))
 
+(defn ^{:private true} filtering
+  "Filter entries according to `FILTER-MAP`"
+  [entries]
+  (cond->> entries
+    (not-empty @FILTER-MAP) (filter-by-map @FILTER-MAP)))
+
+(defn ^{:private true} sorting
+  "Sort given entries"
+  [entries]
+  (let [f (:selected @SORT)
+        dir (:direction @SORT)]
+    (if (and f dir)
+      (sort-by f dir entries)
+      entries)))
 
 (defn curate-entries [controls entries]
-  (let [{:keys [page-num page-amount]} controls
-        filtering #(cond->> %
-                     (not-empty @FILTER-MAP) (filter-by-map @FILTER-MAP))]
+  (let [{:keys [page-num page-amount]} controls]
     (->> entries
          filtering
-        ;; sorting
+         sorting
         ;; paging
         )))
 

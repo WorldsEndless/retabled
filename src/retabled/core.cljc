@@ -27,8 +27,9 @@
 (def FILTER-MAP (atom {}))
 (def SORT (atom {:selected nil
                  :direction <}))
-(def PAGING (atom {:per-page 5
-                   :current-page 0}))
+(def PAGING (atom {:per-screen 5
+                   :current-screen 0
+                   :last-screen 0}))
 
 (defn generate-filter-fn
   "Produce the function which compares a filter-map to a map and deems it good or not. If a :key in `filter-map` doesn't exist when filtering `filterable-map`, the filterable map will fail this function."
@@ -107,15 +108,18 @@
 
 (defn ^{:private true} render-page-controls
   [controls]
-  (let [table-cols (-> controls :cols count)]
+  (let [table-cols (-> controls :cols count)
+        current-screen-for-display (-> @PAGING :current-screen inc)
+        prevfn #(max (dec %) 0)
+        nextfn #(min (inc %) (-> @PAGING :last-screen))]
     [:tr.page-controls-row
      [:td.page-controls {:colSpan table-cols}
-      [:div.control.first [:span.control-label "First"]]
-      [:div.control.prev [:span.control-label "Prev"]]
-      [:div.control.next [:span.control-label "Next"]]
-      [:div.control.last [:span.control-label "Last"]]]])
-  )
-
+      [:div.control.first [:a.control-label {:href "#" :on-click #(swap! PAGING assoc :current-screen 0)} "«"]]
+      [:div.control.prev [:a.control-label {:href "#" :on-click #(swap! PAGING update :current-screen prevfn)} "‹"]]
+      [:div.control.current-screen [:span.page-num current-screen-for-display]]
+      [:div.control.next [:a.control-label {:href "#" :on-click #(swap! PAGING update :current-screen nextfn)} "›"]]
+      [:div.control.last [:a.control-label {:href "#" :on-click #(swap! PAGING assoc :current-screen
+                                                                        (:last-screen @PAGING))} "»"]]]]))
 
 (defn generate-theads
   "generate the table headers"
@@ -154,11 +158,13 @@
       entries)))
 
 (defn ^{:private true} paging
-  "Limit view of entries to a given page"
+  "Limit view of entries to a given screen"
   [entries]
-  (let [{:keys [per-page current-page]} @PAGING
-        parted-entries (partition per-page entries)]
-    (nth parted-entries current-page)))
+  (let [{:keys [per-screen current-screen]} @PAGING
+        parted-entries (partition per-screen entries)
+        max-screens (dec (count parted-entries))]
+    (swap! PAGING assoc :last-screen max-screens)
+    (nth parted-entries current-screen)))
 
 (defn curate-entries [controls entries]
   (let [{:keys [page-num page-amount]} controls]

@@ -92,7 +92,7 @@
 
 (defn ^{:private true} render-header-fields
   [controls]
-  (into [:tr.table-headers]
+  (into [:tr.table-headers.row]
         (for [c (:cols controls)
               :let [h  (cond->> (:headline c)
                          (:sort c) (gen-sort c))
@@ -106,26 +106,30 @@
            set-amount
            set-current-screen
            set-last-screen
-           get-last-screen]}]
-  (let [table-cols 3;(-> controls :cols count)
-        current-screen-for-display (inc (get-current-screen))
+           get-last-screen
+           r-content
+           rr-content
+           f-content
+           ff-content]}]
+  (let [current-screen-for-display (inc (get-current-screen))
         prevfn #(max (dec (get-current-screen)) 0)
         nextfn #(min (inc (get-current-screen)) (get-last-screen))]
-    [:tr.screen-controls-row
-     [:td.screen-controls {:colSpan table-cols}
-      [:div.control.first [:a.control-label {:href "#" :on-click #(set-current-screen 0)} "«"]]
-      [:div.control.prev [:a.control-label {:href "#" :on-click #(set-current-screen (prevfn))} "‹"]]
+    [:tr.row.screen-controls-row
+     [:td.cell.screen-controls {:colSpan "0"}
+      [:div.control.first [:a.control-label {:href "#" :on-click #(set-current-screen 0)} rr-content]]
+      [:div.control.prev [:a.control-label {:href "#" :on-click #(set-current-screen (prevfn))} r-content]]
       [:div.control.current-screen [:span.screen-num current-screen-for-display]]
-      [:div.control.next [:a.control-label {:href "#" :on-click #(set-current-screen (nextfn))} "›"]]
-      [:div.control.last [:a.control-label {:href "#" :on-click #(set-current-screen (get-last-screen))} "»"]]]]))
+      [:div.control.next [:a.control-label {:href "#" :on-click #(set-current-screen (nextfn))} f-content]]
+      [:div.control.last [:a.control-label {:href "#" :on-click #(set-current-screen (get-last-screen))} ff-content]]]]))
 
 (defn generate-theads
   "generate the table headers"
   [controls paging-controls]
   [:thead
+   #_(when (:paging controls)
+     (render-screen-controls paging-controls))
    (render-header-fields controls)
-   (when (:paging controls)
-     (render-screen-controls paging-controls))])
+   ])
 
 (defn generate-rows
   "Generate all the rows of the table from `entries`, according to `controls`"
@@ -138,7 +142,7 @@
                   (for [c cols :let [{:keys [valfn css-class-fn displayfn]
                                       :or {css-class-fn (constantly "field")
                                            displayfn identity}} c]]
-                    [:td {:class (css-class-fn e)}(-> e valfn displayfn)]))))))
+                    [:td.cell {:class (css-class-fn e)}(-> e valfn displayfn)]))))))
 
 (defn ^{:private true} filtering
   "Filter entries according to `FILTER-MAP`"
@@ -169,7 +173,12 @@
                 :get-amount #(:per-screen @DEFAULT-PAGE-ATOM)
                 :set-amount #(swap! DEFAULT-PAGE-ATOM assoc :per-screen %)
                 :get-last-screen #(:last-screen @DEFAULT-PAGE-ATOM)
-                :set-last-screen #(swap! DEFAULT-PAGE-ATOM assoc :last-screen %)}]
+                :set-last-screen #(swap! DEFAULT-PAGE-ATOM assoc :last-screen %)
+                :r-content "‹"
+                :rr-content "«"
+                :f-content "›"
+                :ff-content "»"
+                }]
     paging))
 
 (defn ^{:private true} paging
@@ -196,11 +205,12 @@
   "Generate a table from `entries` according to headers and getter-fns in `controls`"
   [controls entries]
   (let [paging-controls (if (get-in controls [:paging :simple])
-                 (default-paging)
-                 (:paging controls))
+                          (default-paging)
+                          (merge (default-paging)
+                                 (:paging controls)))
         entries (curate-entries paging-controls entries)
         ]
-    [:table
+    [:table.table
      (generate-theads controls paging-controls)
      (generate-rows controls entries)]))
 

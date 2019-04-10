@@ -9,20 +9,7 @@
 ;;;;;;;;;;;;
 ;; STYLES ;;
 ;;;;;;;;;;;;
-(def thead
-  [:thead
-   [:.sortable {:text-decoration "underline"}
-    [:&.sorting-by-this {:color "#000"}]
-    [:&.ascending:after {:content "\"▲\""} ]
-    [:&.descending:after {:content "\"▼\""} ]]
-   [:.screen-controls-row
-    [:.screen-controls
-     [:div.control {:display "inline-block"
-                    :padding-right (em 1)}]
-     ]]])
-
 (defstyles main
   {:vendors ["webkit" "moz" "o" "ms"]}
-  thead
 
   )

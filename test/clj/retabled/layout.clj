@@ -45,16 +45,13 @@
   [:div#boiler-wrapper
    [:div#navbar]
    ;; styles
-   (hp/include-css (context-path assets-path "bootstrap/css/bootstrap.min.css")
+   (hp/include-css (context-path assets-path "bulma/css/bulma.css")
                    (context-path assets-path "font-awesome/css/font-awesome.min.css")
                    (context-path style-path "style.css"))])
 
 (defn cljs-includes []
   [:div
-   (hp/include-js (context-path script-path "app.js") ;; must precede the goog.require
-                  (context-path assets-path "jquery/jquery.min.js")
-                  (context-path assets-path "tether/dist/js/tether.min.js")
-                  (context-path assets-path "bootstrap/js/bootstrap.min.js"))
+   (hp/include-js (context-path script-path "app.js"))
    [:script {:type "text/javascript"} "goog.require('retabled.app')"]])
 
 (defn hiccup-render-cljs-base

@@ -2,7 +2,7 @@
 ** TODO Use
 COMING SOON
 
-Note that a present, while the library places appropriate style classes on elements, it doesn't provide style rules for those classes, so it is left up to the user. The test contains styles (written in Garden) which may serve as examples. 
+Note that a present, while the library places appropriate style classes on elements, it doesn't provide style rules for those classes, so it is left up to the user. Styles are set up in accordance with [[https://bulma.io/documentation/elements/table/][bulma]], but are pretty generic. 
 
 ** Prerequisites
    :PROPERTIES:

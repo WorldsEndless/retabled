@@ -1,4 +1,4 @@
-(defproject retabled "0.1.3"
+(defproject retabled "0.1.4"
   :description "Generate reagent-based tables for display and interaction with data collections"
   :url "http://tech.toryanderson.com"
   :license {:name "Eclipse Public License"
@@ -44,7 +44,7 @@
                                   [org.clojure/tools.cli "0.4.1"]
                                   [org.clojure/tools.logging "0.4.1"]
                                   [org.webjars.bower/tether "1.4.0" :upgrade false]
-                                  [org.webjars/bootstrap "4.0.0-alpha.6-1" :upgrade false]
+                                  [org.webjars.npm/bulma "0.7.4"]
                                   [org.webjars/font-awesome "4.7.0" :upgrade false]
                                   [ring-middleware-format "0.7.3"] ;; CLJ Routing
                                   [ring-webjars "0.2.0"] ;; Web assetts & their routing

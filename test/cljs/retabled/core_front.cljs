@@ -37,12 +37,13 @@
 (defn home-page []
   (let [controls {:page-num (constantly 1)
                   :page-amount (constantly 5)
-                  :paging {:simple true}
+                  :paging {:rr-content "First"}
                   :cols [{:valfn my-valfn
                           :displayfn empty-link
                           :headline "Name"
                           :sort true
-                          :filter true}
+                          :filter true
+                          }
                          {:valfn :job
                           :sort true
                           :headline "Job"}]} ]

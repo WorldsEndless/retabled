@@ -210,6 +210,5 @@
         ]
     [:table
      (generate-theads controls paging-controls)
-     (generate-rows controls entries)
-     ]))
+     (generate-rows controls entries)]))
 

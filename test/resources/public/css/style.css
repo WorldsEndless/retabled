@@ -1,3 +1,15 @@
 thead .sortable {
   text-decoration: underline;
 }
+
+thead .sortable.sorting-by-this {
+  color: #000;
+}
+
+thead .sortable.ascending:after {
+  content: "▲";
+}
+
+thead .sortable.descending:after {
+  content: "▼";
+}

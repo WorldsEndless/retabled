@@ -81,11 +81,12 @@
 (defn gen-sort
   "Render the title as a link that toggles sorting on this column"
   [c headline]
-  (let [sc (condp = (:direction @SORT)
+  (let [sorting-this? (= (:valfn c) (:selected @SORT))
+        sc (condp = (:direction @SORT)
              < "ascending"
-             > "descending")]
-    [:a.sortable {:class sc :href "#" :on-click #(sort-click (:valfn c))} headline]))
-
+             > "descending")
+        classes (when sorting-this? ["sorting-by-this" sc])]
+    [:a.sortable {:class classes :href "#" :on-click #(sort-click (:valfn c))} headline]))
 
 (defn atom?
   "ducktype an atom as something dereferable"
@@ -116,14 +117,26 @@
                                            displayfn identity}} c]]
                     [:td {:class (css-class-fn e)}(-> e valfn displayfn)]))))))
 
+(defn ^{:private true} filtering
+  "Filter entries according to `FILTER-MAP`"
+  [entries]
+  (cond->> entries
+    (not-empty @FILTER-MAP) (filter-by-map @FILTER-MAP)))
+
+(defn ^{:private true} sorting
+  "Sort given entries"
+  [entries]
+  (let [f (:selected @SORT)
+        dir (:direction @SORT)]
+    (if (and f dir)
+      (sort-by f dir entries)
+      entries)))
 
 (defn curate-entries [controls entries]
-  (let [{:keys [page-num page-amount]} controls
-        filtering #(cond->> %
-                     (not-empty @FILTER-MAP) (filter-by-map @FILTER-MAP))]
+  (let [{:keys [page-num page-amount]} controls]
     (->> entries
          filtering
-        ;; sorting
+         sorting
         ;; paging
         )))
 

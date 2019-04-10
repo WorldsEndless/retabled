@@ -35,9 +35,7 @@
   (:name entry (:job entry)))
 
 (defn home-page []
-  (let [controls {:page-num (constantly 1)
-                  :page-amount (constantly 5)
-                  :paging {:rr-content "First"}
+  (let [controls {:paging {:rr-content "First"}
                   :cols [{:valfn my-valfn
                           :displayfn empty-link
                           :headline "Name"

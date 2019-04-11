@@ -5,6 +5,8 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.9.0"]]
   :source-paths ["src"]
+  :repositories [["releases" {:url "https://repo.clojars.org"
+                              :creds :gpg}]]
   :garden {:builds [{:id "style"
                      :source-path "test/clj/retabled/styles"
                      :stylesheet retabled.styles.main/main

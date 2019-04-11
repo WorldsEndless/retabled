@@ -100,6 +100,7 @@
           [:th fi h])))
 
 (defn ^{:private true} render-screen-controls
+  "Render the controls to edit this screen for results"
   [{:as paging-controls
     :keys [get-current-screen
            get-amount
@@ -126,7 +127,7 @@
   "generate the table headers"
   [controls paging-controls]
   [:thead
-   #_(when (:paging controls)
+   (when (:paging controls)
      (render-screen-controls paging-controls))
    (render-header-fields controls)
    ])
@@ -196,10 +197,11 @@
     (nth parted-entries (get-current-screen))))
 
 (defn curate-entries [paging-controls entries]
-  (->> entries
-       (paging paging-controls)
-       filtering
-       sorting))
+  (when (not-empty entries)
+    (->> entries
+         (paging paging-controls)
+         filtering
+         sorting)))
 
 (defn table
   "Generate a table from `entries` according to headers and getter-fns in `controls`"
@@ -208,8 +210,7 @@
                           (default-paging)
                           (merge (default-paging)
                                  (:paging controls)))
-        entries (curate-entries paging-controls entries)
-        ]
+        entries (curate-entries paging-controls entries)]
     [:table.table
      (generate-theads controls paging-controls)
      (generate-rows controls entries)]))

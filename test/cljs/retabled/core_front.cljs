@@ -45,10 +45,12 @@
                          {:valfn :job
                           :sort true
                           :headline "Job"}]} ]
-    [page-template {:jumbo-title "Retabled"
-                    :contents [:div.dashboard.text-center
-                               (ret/table controls table-data)
-                               ]}]))
+    [:div.content
+     [:section.hero
+      [:div.hero-body
+       [:h1.title "Retabled"]]]
+     [ret/table controls table-data]
+     ]))
 
 (def pages
   {:home #'home-page})

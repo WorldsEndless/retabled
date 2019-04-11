@@ -11,5 +11,5 @@
 ;;;;;;;;;;;;
 (defstyles main
   {:vendors ["webkit" "moz" "o" "ms"]}
-
-  )
+  [:div.control {:display "inline-block"
+                 :padding-right (em 1)}])

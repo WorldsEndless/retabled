@@ -25,7 +25,11 @@
             :get-last-screen (fn [] "Get the last screen num (0-based), from an atom or reframe, etc")
             :set-last-screen (fn [n] "Set last screen num.")
             :get-amount (fn [] "Get the number of entries visible per screen")
-            :set-amount (fn [n] "Set number of entries visible per screen. Default 5.")}})
+            :set-amount (fn [n] "Set number of entries visible per screen. Default 5.")
+            :r-content [:div.icon "prev-page"]
+            :rr-content [:div.icon "first page"]
+            :f-content [:div.icon "next page"]
+            :ff-content [:div.icon "last page"]}})
 
 (def FILTER-MAP (atom {}))
 (def SORT (atom {:selected nil

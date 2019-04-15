@@ -122,7 +122,7 @@
         prevfn #(max (dec (get-current-screen)) 0)
         nextfn #(min (inc (get-current-screen)) (get-final-screen))]
     [:tr.row.screen-controls-row
-     [:td.cell.screen-controls {:colSpan "0"}
+     [:td.cell.screen-controls {:colSpan "100"}
       [:div.control.first [:a.control-label {:href "#" :on-click #(set-current-screen 0)} rr-content]]
       [:div.control.prev [:a.control-label {:href "#" :on-click #(set-current-screen (prevfn))} r-content]]
       [:div.control.current-screen [:span.screen-num current-screen-for-display]]

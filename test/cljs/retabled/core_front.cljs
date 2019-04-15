@@ -20,7 +20,8 @@
   (let [A (atom 0)]
     (into [] (repeatedly 15 (fn []
                               {:name (str "John Doe " (swap! A inc))
-                               :job (random-job)})))))
+                               :job (random-job)
+                               :id @A})))))
 
 
 (defn empty-link
@@ -36,7 +37,11 @@
 
 (defn home-page []
   (let [controls {:paging {:rr-content "First"}
-                  :cols [{:valfn my-valfn
+                  :cols [{:valfn :id
+                          :headline "ID"
+                          :sort true
+                          :filter true}
+                         {:valfn my-valfn
                           :displayfn empty-link
                           :headline "Name"
                           :sort true

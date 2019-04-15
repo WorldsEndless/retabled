@@ -22,21 +22,21 @@
    :paging {:simple "If truthy, use a local atom and default setters and getters without bothering with anything else defined in `:paging`. "
             :get-current-screen (fn [] "Get the current screen num (0-based), from an atom or reframe, etc")
             :set-current-screen (fn [n] "Set current screen num. Default 0.")
-            :get-last-screen (fn [] "Get the last screen num (0-based), from an atom or reframe, etc")
-            :set-last-screen (fn [n] "Set last screen num.")
+            :get-final-screen (fn [] "Get the final screen num (0-based), from an atom or reframe, etc")
+            :set-final-screen (fn [n] "Set final screen num.")
             :get-amount (fn [] "Get the number of entries visible per screen")
             :set-amount (fn [n] "Set number of entries visible per screen. Default 5.")
             :r-content [:div.icon "prev-page"]
             :rr-content [:div.icon "first page"]
             :f-content [:div.icon "next page"]
-            :ff-content [:div.icon "last page"]}})
+            :ff-content [:div.icon "final page"]}})
 
 (def FILTER-MAP (atom {}))
 (def SORT (atom {:selected nil
                  :direction <}))
 (def PAGING (atom {:per-screen 5
                    :current-screen 0
-                   :last-screen 0}))
+                   :final-screen 0}))
 
 (defn generate-filter-fn
   "Produce the function which compares a filter-map to a map and deems it good or not. If a :key in `filter-map` doesn't exist when filtering `filterable-map`, the filterable map will fail this function."
@@ -110,22 +110,22 @@
            get-amount
            set-amount
            set-current-screen
-           set-last-screen
-           get-last-screen
+           set-final-screen
+           get-final-screen
            r-content
            rr-content
            f-content
            ff-content]}]
   (let [current-screen-for-display (inc (get-current-screen))
         prevfn #(max (dec (get-current-screen)) 0)
-        nextfn #(min (inc (get-current-screen)) (get-last-screen))]
+        nextfn #(min (inc (get-current-screen)) (get-final-screen))]
     [:tr.row.screen-controls-row
      [:td.cell.screen-controls {:colSpan "0"}
       [:div.control.first [:a.control-label {:href "#" :on-click #(set-current-screen 0)} rr-content]]
       [:div.control.prev [:a.control-label {:href "#" :on-click #(set-current-screen (prevfn))} r-content]]
       [:div.control.current-screen [:span.screen-num current-screen-for-display]]
       [:div.control.next [:a.control-label {:href "#" :on-click #(set-current-screen (nextfn))} f-content]]
-      [:div.control.last [:a.control-label {:href "#" :on-click #(set-current-screen (get-last-screen))} ff-content]]]]))
+      [:div.control.final [:a.control-label {:href "#" :on-click #(set-current-screen (get-final-screen))} ff-content]]]]))
 
 (defn generate-theads
   "generate the table headers"
@@ -165,7 +165,7 @@
       entries)))
 
 (def DEFAULT-PAGE-ATOM (atom {:current-screen 0
-                              :last-screen 0
+                              :final-screen 0
                               :per-screen 5}))
 
 (defn default-paging
@@ -177,8 +177,8 @@
                                        (swap! DEFAULT-PAGE-ATOM assoc :current-screen %))                
                 :get-amount #(:per-screen @DEFAULT-PAGE-ATOM)
                 :set-amount #(swap! DEFAULT-PAGE-ATOM assoc :per-screen %)
-                :get-last-screen #(:last-screen @DEFAULT-PAGE-ATOM)
-                :set-last-screen #(swap! DEFAULT-PAGE-ATOM assoc :last-screen %)
+                :get-final-screen #(:final-screen @DEFAULT-PAGE-ATOM)
+                :set-final-screen #(swap! DEFAULT-PAGE-ATOM assoc :final-screen %)
                 :r-content "‹"
                 :rr-content "«"
                 :f-content "›"
@@ -193,11 +193,11 @@
                 get-amount
                 set-amount
                 set-current-screen
-                set-last-screen
-                get-last-screen]} paging-controls
+                set-final-screen
+                get-final-screen]} paging-controls
         parted-entries (partition (get-amount) entries)
         max-screens (dec (count parted-entries))]
-    (set-last-screen max-screens)
+    (set-final-screen max-screens)
     (nth parted-entries (get-current-screen))))
 
 (defn curate-entries [paging-controls entries]

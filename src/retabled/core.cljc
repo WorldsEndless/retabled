@@ -46,11 +46,11 @@
             (for [[k f] filter-map
                   :let [field-filter-fn (cond 
                                           (fn? f) f
-                                          (string? f) (partial re-find (re-pattern (str f)))
+                                          (string? f) (partial re-find (re-pattern (str f))) ;; TODO right now ints treated as strings. Update this? 
                                           (int? f) #(= f %)
                                           :else (throw (ex-info "Invalid filter-fn given to generate-filter-fn" {:received {k f}})))]]
               (when-let [filterable-value (k filterable-map)]
-                (field-filter-fn filterable-value))))))
+                (field-filter-fn (str filterable-value)))))))
 
 
 (defn filter-by-map

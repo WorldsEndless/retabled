@@ -19,6 +19,8 @@
   sequence of maps where each map corresponds to one column of the table."
   {:row-class-fn (fn [entry] "Provides the class (str or vector) of a :tr, given entry")
    :cols col-map-help
+   :controls-left (fn [content] "fn of `content` to place before the paging controls (if any)")
+   :controls-right (fn [content] "fn of `content` to place after the paging controls (if any)")
    :paging {:simple "If truthy, use a local atom and default setters and getters without bothering with anything else defined in `:paging`. "
             :get-current-screen (fn [] "Get the current screen num (0-based), from an atom or reframe, etc")
             :set-current-screen (fn [n] "Set current screen num. Default 0.")

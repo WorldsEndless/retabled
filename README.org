@@ -3,6 +3,9 @@
 COMING SOON
 
 Note that a present, while the library places appropriate style classes on elements, it doesn't provide style rules for those classes, so it is left up to the user. Styles are set up in accordance with [[https://bulma.io/documentation/elements/table/][bulma]], but are pretty generic. 
+** CHANGES
+*** V2
+- No longer breaks if number of entries is less than screen size
 
 ** Prerequisites
    :PROPERTIES:

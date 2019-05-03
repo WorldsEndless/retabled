@@ -31,7 +31,9 @@
             :r-content [:div.icon "prev-page"]
             :rr-content [:div.icon "first page"]
             :f-content [:div.icon "next page"]
-            :ff-content [:div.icon "final page"]}})
+            :ff-content [:div.icon "final page"]
+            :left-bar-content [:div.whatever "Stuff before the controls"]
+            :right-bar-content [:div.whatever "Stuff after the controls"]}})
 
 (def FILTER-MAP (atom {}))
 (def SORT (atom {:selected nil
@@ -117,17 +119,21 @@
            r-content
            rr-content
            f-content
-           ff-content]}]
+           ff-content
+           left-bar-content
+           right-bar-content]}]
   (let [current-screen-for-display (inc (get-current-screen))
         prevfn #(max (dec (get-current-screen)) 0)
         nextfn #(min (inc (get-current-screen)) (get-final-screen))]
     [:tr.row.screen-controls-row
      [:td.cell.screen-controls {:colSpan "100"}
+      left-bar-content
       [:div.control.first [:a.control-label {:href "#" :on-click #(set-current-screen 0)} rr-content]]
       [:div.control.prev [:a.control-label {:href "#" :on-click #(set-current-screen (prevfn))} r-content]]
       [:div.control.current-screen [:span.screen-num current-screen-for-display]]
       [:div.control.next [:a.control-label {:href "#" :on-click #(set-current-screen (nextfn))} f-content]]
-      [:div.control.final [:a.control-label {:href "#" :on-click #(set-current-screen (get-final-screen))} ff-content]]]]))
+      [:div.control.final [:a.control-label {:href "#" :on-click #(set-current-screen (get-final-screen))} ff-content]]
+      right-bar-content]]))
 
 (defn generate-theads
   "generate the table headers"
@@ -197,7 +203,9 @@
                 set-current-screen
                 set-final-screen
                 get-final-screen]} paging-controls
-        parted-entries (partition (get-amount) entries)
+        parted-entries (if (> (get-amount) (count entries))
+                         (list entries)
+                         (partition (get-amount) entries))
         max-screens (dec (count parted-entries))]
     (set-final-screen max-screens)
     (nth parted-entries (get-current-screen))))

@@ -36,7 +36,10 @@
   (:name entry (:job entry)))
 
 (defn home-page []
-  (let [controls {:paging {:rr-content "First"}
+  (let [controls {:paging {:rr-content "First"
+                           :left-bar-content [:h3 {:style {:display "inline-block"
+                                                           :margin-right "1em"}} "I'm on the left"]
+                           :right-bar-content [:h3 "I'm on the right"] }
                   :cols [{:valfn :id
                           :headline "ID"
                           :sort true

@@ -180,9 +180,7 @@
   "Set up a local atom and define paging functions with reference to it"
   []
   (let [paging {:get-current-screen #(:current-screen @DEFAULT-PAGE-ATOM)
-                :set-current-screen #(do
-                                       (println "Setting current screen to:" %)
-                                       (swap! DEFAULT-PAGE-ATOM assoc :current-screen %))                
+                :set-current-screen #(swap! DEFAULT-PAGE-ATOM assoc :current-screen %)                
                 :get-amount #(:per-screen @DEFAULT-PAGE-ATOM)
                 :set-amount #(swap! DEFAULT-PAGE-ATOM assoc :per-screen %)
                 :get-final-screen #(:final-screen @DEFAULT-PAGE-ATOM)
@@ -203,9 +201,10 @@
                 set-current-screen
                 set-final-screen
                 get-final-screen]} paging-controls
+        amt (get-amount)
         parted-entries (if (> (get-amount) (count entries))
                          (list entries)
-                         (partition (get-amount) entries))
+                         (partition amt amt nil entries))
         max-screens (dec (count parted-entries))]
     (set-final-screen max-screens)
     (nth parted-entries (get-current-screen))))

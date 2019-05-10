@@ -40,19 +40,19 @@
                            :left-bar-content [:h3 {:style {:display "inline-block"
                                                            :margin-right "1em"}} "I'm on the left"]
                            :right-bar-content [:h3 "I'm on the right"] }
-                  :cols [{:valfn :id
-                          :headline "ID"
-                          :sort true
-                          :filter true}
-                         {:valfn my-valfn
-                          :displayfn empty-link
-                          :headline "Name"
-                          :sort true
-                          :filter true
-                          }
-                         {:valfn :job
-                          :sort true
-                          :headline "Job"}]} ]
+                  :columns [{:valfn :id
+                             :headline "ID"
+                             :sort true
+                             :filter true}
+                            {:valfn my-valfn
+                             :displayfn empty-link
+                             :headline "Name"
+                             :sort true
+                             :filter true
+                             }
+                            {:valfn :job
+                             :sort true
+                             :headline "Job"}]} ]
     [:div.content
      [:section.hero
       [:div.hero-body

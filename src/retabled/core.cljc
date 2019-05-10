@@ -4,7 +4,7 @@
             [clojure.string :as str]))
 
 (def col-map-help
-  "Possible values of col-maps within `:cols` of control-map "
+  "Possible values of col-maps within `:columns` of control-map "
   [{:valfn (fn [entry] "Retrieves the value of this cell from `entry`")
     :displayfn (fn [valfn-value] "Produces the display from result `(valfn entry)`. 
                                   Default `identity`" )
@@ -18,7 +18,7 @@
   "The possible values of a control-map for a table, which should be a
   sequence of maps where each map corresponds to one column of the table."
   {:row-class-fn (fn [entry] "Provides the class (str or vector) of a :tr, given entry")
-   :cols col-map-help
+   :columns col-map-help
    :controls-left (fn [content] "fn of `content` to place before the paging controls (if any)")
    :controls-right (fn [content] "fn of `content` to place after the paging controls (if any)")
    :paging {:simple "If truthy, use a local atom and default setters and getters without bothering with anything else defined in `:paging`. "
@@ -101,7 +101,7 @@
 (defn ^{:private true} render-header-fields
   [controls]
   (into [:tr.table-headers.row]
-        (for [c (:cols controls)
+        (for [c (:columns controls)
               :let [h  (cond->> (:headline c)
                          (:sort c) (gen-sort c))
                     fi (when (:filter c) (gen-filter c))]]
@@ -121,12 +121,14 @@
            f-content
            ff-content
            left-bar-content
-           right-bar-content]}]
+           right-bar-content
+           num-columns]
+    :or {num-columns 100}}]
   (let [current-screen-for-display (inc (get-current-screen))
         prevfn #(max (dec (get-current-screen)) 0)
         nextfn #(min (inc (get-current-screen)) (get-final-screen))]
     [:tr.row.screen-controls-row
-     [:td.cell.screen-controls {:colSpan "100"}
+     [:td.cell.screen-controls {:colSpan num-columns}
       left-bar-content
       [:div.control.first [:a.control-label {:href "#" :on-click #(set-current-screen 0)} rr-content]]
       [:div.control.prev [:a.control-label {:href "#" :on-click #(set-current-screen (prevfn))} r-content]]
@@ -147,12 +149,12 @@
 (defn generate-rows
   "Generate all the rows of the table from `entries`, according to `controls`"
   [controls entries]
-  (let [{:keys [row-class-fn cols]
+  (let [{:keys [row-class-fn columns]
          :or {row-class-fn (constantly "row")}} controls ]
     (into [:tbody]
           (for [e entries :let [tr [:tr {:class (row-class-fn e)}]]]
             (into tr
-                  (for [c cols :let [{:keys [valfn css-class-fn displayfn]
+                  (for [c columns :let [{:keys [valfn css-class-fn displayfn]
                                       :or {css-class-fn (constantly "field")
                                            displayfn identity}} c]]
                     [:td.cell {:class (css-class-fn e)}(-> e valfn displayfn)]))))))
@@ -223,6 +225,7 @@
                           (default-paging)
                           (merge (default-paging)
                                  (:paging controls)))
+        colspan {:colspan (count (:columns controls))}
         entries (curate-entries paging-controls entries)]
     [:table.table
      (generate-theads controls paging-controls)

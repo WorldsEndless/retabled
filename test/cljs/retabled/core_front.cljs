@@ -18,7 +18,7 @@
 
 (def table-data
   (let [A (atom 0)]
-    (into [] (repeatedly 15 (fn []
+    (into [] (repeatedly 17 (fn []
                               {:name (str "John Doe " (swap! A inc))
                                :job (random-job)
                                :id @A})))))

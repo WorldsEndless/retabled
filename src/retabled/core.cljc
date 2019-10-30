@@ -6,6 +6,7 @@
 (def col-map-help
   "Possible values of col-maps within `:columns` of control-map "
   [{:valfn (fn [entry] "Retrieves the value of this cell from `entry`")
+    :sortfn (fn [entry] "Given an entry, how to sort it by this field. Defaults to `valfn`.")
     :displayfn (fn [valfn-value] "Produces the display from result `(valfn entry)`. 
                                   Default `identity`" )
     :headline "The string to display in table header"
@@ -85,12 +86,13 @@
 (defn gen-sort
   "Render the title as a link that toggles sorting on this column"
   [c headline]
-  (let [sorting-this? (= (:valfn c) (:selected @SORT))
+  (let [sortfn (or (:sortfn c) (:valfn c))
+        sorting-this? (= sortfn (:selected @SORT))
         sc (condp = (:direction @SORT)
              < "ascending"
              > "descending")
         classes (when sorting-this? ["sorting-by-this" sc])]
-    [:a.sortable {:class classes :href "#" :on-click #(sort-click (:valfn c))} headline]))
+    [:a.sortable {:class classes :href "#" :on-click #(sort-click sortfn)} headline]))
 
 (defn atom?
   "ducktype an atom as something dereferable"

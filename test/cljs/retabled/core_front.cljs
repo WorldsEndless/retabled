@@ -42,6 +42,10 @@
                            :right-bar-content [:h3 "I'm on the right"] }
                   :columns [{:valfn :id
                              :headline "ID"
+                             :sortfn (fn [entry] (let [id (:id entry) ]
+                                                   (cond
+                                                     (> 3 id) (- 5 id)
+                                                     (<= 2 id) id)))
                              :sort true
                              :filter true}
                             {:valfn my-valfn

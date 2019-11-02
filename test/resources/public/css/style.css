@@ -2,3 +2,11 @@ div.control {
   display: inline-block;
   padding-right: 1em;
 }
+
+.sorting-by-this.descending:after {
+  content: "▲";
+}
+
+.sorting-by-this.ascending:after {
+  content: "▼";
+}

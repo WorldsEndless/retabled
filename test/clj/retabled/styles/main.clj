@@ -12,4 +12,9 @@
 (defstyles main
   {:vendors ["webkit" "moz" "o" "ms"]}
   [:div.control {:display "inline-block"
-                 :padding-right (em 1)}])
+                 :padding-right (em 1)}]
+  [:.sorting-by-this.descending:after
+   {:content "\"▲\""}]
+  [:.sorting-by-this.ascending:after
+   {:content "\"▼\""}]
+)

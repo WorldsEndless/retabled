@@ -15,13 +15,16 @@
   (let [jobs ["programmer" "Dog catcher" "pizza deliverer" "pro-gamer"] ]
     (rand-nth jobs)))
 
+(def AMOUNT 15)
+
 
 (def table-data
   (let [A (atom 0)]
-    (into [] (repeatedly 17 (fn []
+    (into [] (repeatedly AMOUNT (fn []
                               {:name (str "John Doe " (swap! A inc))
                                :job (random-job)
-                               :id @A})))))
+                               :id @A
+                               :guid (rand-int 1000)})))))
 
 
 (defn empty-link
@@ -39,11 +42,17 @@
   (let [controls {:paging {:rr-content "First"
                            :left-bar-content [:h3 {:style {:display "inline-block"
                                                            :margin-right "1em"}} "I'm on the left"]
-                           :right-bar-content [:h3 "I'm on the right"] }
-                  :columns [{:valfn :id
+                           :right-bar-content [:h3 "I'm on the right"]
+                           :get-amount (constantly (/ AMOUNT 3))}
+                  :columns [{:valfn identity
                              :headline "ID"
+                             :sortfn (fn [entry] (let [id (:id entry) ]
+                                                   (cond
+                                                     (> 3 id) (- 5 id)
+                                                     (<= 2 id) id)))
                              :sort true
-                             :filter true}
+                             :filter true
+                             :displayfn #(:id %)}
                             {:valfn my-valfn
                              :displayfn empty-link
                              :headline "Name"
@@ -52,7 +61,11 @@
                              }
                             {:valfn :job
                              :sort true
-                             :headline "Job"}]} ]
+                             :headline "Job"}
+                            {:valfn identity
+                             :sort true
+                             :sortfn #(:guid %)
+                             :headline "GUID"}]} ]
     [:div.content
      [:section.hero
       [:div.hero-body

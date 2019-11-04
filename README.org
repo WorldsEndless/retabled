@@ -1,9 +1,15 @@
 * retabled
-** TODO Use
-COMING SOON
-
+** Use
 Note that a present, while the library places appropriate style classes on elements, it doesn't provide style rules for those classes, so it is left up to the user. Styles are set up in accordance with [[https://bulma.io/documentation/elements/table/][bulma]], but are pretty generic. 
+
+The basic usecase is =(retabled.core/table controls table-data)=. Table-data is simply a sequence of uniform maps, the kind of thing you get from a database. Controls defines how to make each row of that data into a table row. 
+
+Full example is in our test, [[https://github.com/BYU-ODH/retabled/blob/master/test/cljs/retabled/core_front.cljs][retabled.core-front]]
+
+*** 
 ** CHANGES
+*** V4
+- sortfn key added to controls
 *** V3
 - BREAKING: =:cols= renamed to =:columns= in the control-map
 - Final screen is now available if there are a remainder of entires

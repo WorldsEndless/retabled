@@ -1,4 +1,4 @@
-(defproject retabled "3"
+(defproject byu-odh/retabled "5"
   :description "Generate reagent-based tables for display and interaction with data collections"
   :url "http://tech.toryanderson.com"
   :license {:name "Eclipse Public License"
@@ -42,7 +42,8 @@
                                   [metosin/ring-http-response "0.9.1"]
                                   [mount "0.1.16"] ;; Modular runtime operation
                                   [org.clojure/clojure "1.9.0"]
-                                  [org.clojure/clojurescript "1.10.439" :scope "provided"]
+                                  [org.clojure/clojurescript "1.10.439" ;:scope "provided"
+                                   ]
                                   [org.clojure/tools.cli "0.4.1"]
                                   [org.clojure/tools.logging "0.4.1"]
                                   [org.webjars.npm/bulma "0.7.4"]

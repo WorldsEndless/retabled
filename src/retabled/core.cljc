@@ -197,21 +197,23 @@
     paging))
 
 (defn ^{:private true} paging
-  "Limit view of entries to a given screen"
+  "Limit view of entries to a given screen.
+  If `paging-controls` is falsy, do not filter."
   [paging-controls entries]
-  (let [{:keys [get-current-screen
-                get-amount
-                set-amount
-                set-current-screen
-                set-final-screen
-                get-final-screen]} paging-controls
-        amt (get-amount)
-        parted-entries (if (> (get-amount) (count entries))
-                         (list entries)
-                         (partition amt amt nil entries))
-        max-screens (dec (count parted-entries))]
-    (set-final-screen max-screens)
-    (nth parted-entries (get-current-screen))))
+  (if-not paging-controls entries
+          (let [{:keys [get-current-screen
+                        get-amount
+                        set-amount
+                        set-current-screen
+                        set-final-screen
+                        get-final-screen]} paging-controls
+                amt (get-amount)
+                parted-entries (if (> (get-amount) (count entries))
+                                 (list entries)
+                                 (partition amt amt nil entries))
+                max-screens (dec (count parted-entries))]
+            (set-final-screen max-screens)
+            (nth parted-entries (get-current-screen)))))
 
 (defn curate-entries [paging-controls entries]
   (when (not-empty entries)
@@ -223,11 +225,15 @@
 (defn table
   "Generate a table from `entries` according to headers and getter-fns in `controls`"
   [controls entries]
-  (let [paging-controls (if (get-in controls [:paging :simple])
-                          (default-paging)
-                          (merge (default-paging)
-                                 (:paging controls)))
-        colspan {:colspan (count (:columns controls))}
+  (let [paging-controls (cond (get-in controls [:paging :simple])
+                              (default-paging)
+
+                              (get-in controls [:paging])
+                              (merge (default-paging)
+                                     (:paging controls))
+
+                              :no-paging
+                              nil)
         entries (curate-entries paging-controls entries)]
     [:table.table
      (generate-theads controls paging-controls)

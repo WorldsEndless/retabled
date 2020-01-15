@@ -13,7 +13,7 @@ By default only up to five results will be shown at a time on a table, with pagi
 
 ** CHANGES
 *** V6
-- improved example
+- improved example, nil paging
 *** V5
 - sortfn bug fixes, sort direction indicated on sort style
 *** V4

@@ -1,5 +1,5 @@
 * retabled
-  =[byu-odh/retabled "6"]=
+  =[byu-odh/retabled "7"]=
 
 ** Use
 Note that a present, while the library places appropriate style classes on elements, it doesn't provide style rules for those classes, so it is left up to the user. Styles are set up in accordance with [[https://bulma.io/documentation/elements/table/][bulma]], but are pretty generic. 
@@ -12,6 +12,8 @@ Full example is in our test, [[https://github.com/BYU-ODH/retabled/blob/master/t
 By default only up to five results will be shown at a time on a table, with paging provided to get to next results. This can be changed by setting ={:paging nil}= in the control map (as well as other available paging options). 
 
 ** CHANGES
+*** V7
+- Removed "#" linking for sorting; now using html5 absent hrefs. 
 *** V6
 - improved example, nil paging
 *** V5

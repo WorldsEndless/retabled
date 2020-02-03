@@ -37,11 +37,17 @@
             :right-bar-content [:div.whatever "Stuff after the controls"]}})
 
 (def FILTER-MAP (atom {}))
-(def SORT (atom {:selected nil
-                 :direction <}))
+(def ^:dynamic *SORT* nil)
 (def PAGING (atom {:per-screen 5
                    :current-screen 0
                    :final-screen 0}))
+
+(defn default-sort
+  "function to return a default sort map-atom"
+  []
+  (atom {:selected nil
+         :direction <}))
+
 
 (defn generate-filter-fn
   "Produce the function which compares a filter-map to a map and deems it good or not. If a :key in `filter-map` doesn't exist when filtering `filterable-map`, the filterable map will fail this function."
@@ -77,18 +83,20 @@
 (defn sort-click
   "Select sort field; if sort field unchanged, sort direction"
   [valfn]
-  (let [currently-selected (:selected @SORT)
+  ;; TODO we lose our binding to *SORT* here
+  (let [currently-selected (:selected @*SORT*)
         swap-dir #(if (= <  %) > <)]
     (if (not= currently-selected valfn)
-      (swap! SORT assoc :selected valfn)
-      (swap! SORT update :direction swap-dir))))
+      (swap! *SORT* assoc :selected valfn)
+      (swap! *SORT* update :direction swap-dir))))
 
 (defn gen-sort
   "Render the title as a link that toggles sorting on this column"
   [c headline]
+  (println "In gen-sort, *SORT* is:" *SORT*)
   (let [sortfn (or (:sortfn c) (:valfn c))
-        sorting-this? (= sortfn (:selected @SORT))
-        sc (condp = (:direction @SORT)
+        sorting-this? (= sortfn (:selected @*SORT*))
+        sc (condp = (:direction @*SORT*)
              < "ascending"
              > "descending")
         classes (when sorting-this? ["sorting-by-this" sc])]
@@ -142,11 +150,11 @@
 (defn generate-theads
   "generate the table headers"
   [controls paging-controls]
+  (println "In generate-theads *SORT* is:" (prn-str *SORT*))
   [:thead
    (when (:paging controls)
      (render-screen-controls paging-controls))
-   (render-header-fields controls)
-   ])
+   (render-header-fields controls)])
 
 (defn generate-rows
   "Generate all the rows of the table from `entries`, according to `controls`"
@@ -170,8 +178,8 @@
 (defn ^{:private true} sorting
   "Sort given entries"
   [entries]
-  (let [f (:selected @SORT)
-        dir (:direction @SORT)]
+  (let [f (:selected @*SORT*)
+        dir (:direction @*SORT*)]
     (if (and f dir)
       (sort-by f dir entries)
       entries)))
@@ -222,20 +230,24 @@
          filtering
          sorting)))
 
+
 (defn table
   "Generate a table from `entries` according to headers and getter-fns in `controls`"
   [controls entries]
-  (let [paging-controls (cond (get-in controls [:paging :simple])
-                              (default-paging)
+  (println ">>> Outside bind sort is:" *SORT*)
 
-                              (get-in controls [:paging])
-                              (merge (default-paging)
-                                     (:paging controls))
+  (binding [*SORT* (default-sort)]
+    (let [paging-controls (cond (get-in controls [:paging :simple])
+                                (default-paging)
 
-                              :no-paging
-                              nil)
-        entries (curate-entries paging-controls entries)]
-    [:table.table
-     (generate-theads controls paging-controls)
-     (generate-rows controls entries)]))
+                                (get-in controls [:paging])
+                                (merge (default-paging)
+                                       (:paging controls))
+
+                                :no-paging
+                                nil)
+          entries (curate-entries paging-controls entries)]      
+      [:table.table
+       (generate-theads controls paging-controls)
+       (generate-rows controls entries)])))
 

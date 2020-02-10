@@ -81,6 +81,8 @@
 (defn sort-click
   "Select sort field; if sort field unchanged, sort direction"
   [valfn SORT]
+  (println ">> sort-click")
+  (prn {:valfn valfn :sort SORT})
   (let [currently-selected (:selected @SORT)
         swap-dir #(if (= <  %) > <)]
     (if (not= currently-selected valfn)
@@ -90,7 +92,6 @@
 (defn gen-sort
   "Render the title as a link that toggles sorting on this column"
   [c SORT headline]
-  (println "In gen-sort, SORT is:" SORT)
   (let [sortfn (or (:sortfn c) (:valfn c))
         sorting-this? (= sortfn (:selected @SORT))
         sc (condp = (:direction @SORT)
@@ -226,22 +227,22 @@
          filtering
          (sorting SORT))))
 
-
 (defn table
   "Generate a table from `entries` according to headers and getter-fns in `controls`"
   [controls entries]
-  (let [SORT (atom default-sort)
-        paging-controls (cond (get-in controls [:paging :simple])
-                              (default-paging)
+  (let [SORT (atom default-sort)]
+    (fn interior-table []
+      (let [paging-controls (cond (get-in controls [:paging :simple])
+                                  (default-paging)
 
-                              (get-in controls [:paging])
-                              (merge (default-paging)
-                                     (:paging controls))
+                                  (get-in controls [:paging])
+                                  (merge (default-paging)
+                                         (:paging controls))
 
-                              :no-paging
-                              nil)
-        entries (curate-entries paging-controls entries SORT)]      
-    [:table.table
-     (generate-theads controls paging-controls SORT)
-     (generate-rows controls entries)]))
+                                  :no-paging
+                                  nil)
+            entries (curate-entries paging-controls entries SORT)]      
+        [:table.table
+         (generate-theads controls paging-controls SORT)
+         (generate-rows controls entries)]))))
 

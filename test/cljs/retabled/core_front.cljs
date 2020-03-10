@@ -120,10 +120,11 @@
      [:section.hero
       [:div.hero-body
        [:h1.title "Retabled"]]]
+     #_[:div.dat "My data:"
+      (prn-str @table-data)]
      [:div.table1
       [:h2.title "Table 1"]
-      (let [d @table-data]
-        [ret/table controls d])]
+      [ret/table controls @table-data]]
      #_[:div.table2
         [:h2.title "Table 2"]
         [ret/table controls2 @table-data2]]

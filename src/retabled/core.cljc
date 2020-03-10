@@ -159,12 +159,12 @@
   (let [{:keys [row-class-fn columns]
          :or {row-class-fn (constantly "row")}} controls ]
     (into [:tbody]
-          (for [e entries :let [tr [:tr {:class (row-class-fn e)}]]]
+          (for [e entries :let [tr ^{:key e} [:tr {:class (row-class-fn e)}]]]
             (into tr
                   (for [c columns :let [{:keys [valfn css-class-fn displayfn]
                                       :or {css-class-fn (constantly "field")
                                            displayfn identity}} c]]
-                    [:td.cell {:class (css-class-fn e)}(-> e valfn displayfn)]))))))
+                   ^{:key c} [:td.cell {:class (css-class-fn e)}(-> e valfn displayfn)]))))))
 
 (defn ^{:private true} filtering
   "Filter entries according to `FILTER-MAP`"
@@ -231,7 +231,7 @@
   "Generate a table from `entries` according to headers and getter-fns in `controls`"
   [controls entries]
   (let [SORT (atom default-sort)]
-    (fn interior-table []
+    (fn interior-table [controls entries]
       (let [paging-controls (cond (get-in controls [:paging :simple])
                                   (default-paging)
 
@@ -243,6 +243,6 @@
                                   nil)
             entries (curate-entries paging-controls entries SORT)]      
         [:table.table
-         (generate-theads controls paging-controls SORT)
-         (generate-rows controls entries)]))))
+         [generate-theads controls paging-controls SORT]
+         [generate-rows controls entries]]))))
 

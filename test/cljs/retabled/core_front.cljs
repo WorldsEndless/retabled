@@ -25,22 +25,29 @@
                            (for [[k f] desc-map] [k (f)])))))
 
 (def table-data
-  (let [AMOUNT 5
+  (let [AMOUNT 2
         A (atom 0)]
-    (gen-table-data AMOUNT
-                    {:name #(str "John Doe " (swap! A inc))
-                     :job  random-job
-                     :id   #(deref A)
-                     :guid #(rand-int 1000)})))
+    (r/atom (gen-table-data AMOUNT
+                            {:name #(str "John Doe " (swap! A inc))
+                             :job  random-job
+                             :id   #(deref A)
+                             :guid #(rand-int 1000)}))))
+
+#_(swap! table-data into
+         (gen-table-data 3
+                         {:name #(str "Jane Doe " (rand-int 5))
+                          :job  random-job
+                          :id (constantly "nonsense")
+                          :guid #(rand-int 1000)}))
 
 (def table-data2
   (let [AMOUNT 8
         A (atom 0)]
-    (gen-table-data AMOUNT
-                    {:name #(str "Jane Dear " (swap! A inc))
-                     :job  random-job
-                     :id   #(deref A)
-                     :guid #(rand-int 1000)})))
+    (r/atom (gen-table-data AMOUNT
+                            {:name #(str "Jane Dear " (swap! A inc))
+                             :job  random-job
+                             :id   #(deref A)
+                             :guid #(rand-int 1000)}))))
 
 
 (defn empty-link
@@ -115,10 +122,11 @@
        [:h1.title "Retabled"]]]
      [:div.table1
       [:h2.title "Table 1"]
-      [ret/table controls table-data]]
-     [:div.table2
-      [:h2.title "Table 2"]
-      [ret/table controls table-data2]]
+      (let [d @table-data]
+        [ret/table controls d])]
+     #_[:div.table2
+        [:h2.title "Table 2"]
+        [ret/table controls2 @table-data2]]
      ]))
 
 (def pages

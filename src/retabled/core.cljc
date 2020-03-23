@@ -82,8 +82,6 @@
 (defn sort-click
   "Select sort field; if sort field unchanged, sort direction"
   [valfn SORT]
-  (println ">> sort-click")
-  (prn {:valfn valfn :sort SORT})
   (let [currently-selected (:selected @SORT)
         swap-dir #(if (= <  %) > <)]
     (if (not= currently-selected valfn)

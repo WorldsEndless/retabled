@@ -1,5 +1,5 @@
 ;; -*- eval: (rainbow-mode) -*-
-(ns retabled.styles.main
+(ns retabled.styles
   "Garden styles following the BYU schemes"
   (:require [garden.def :refer [defstylesheet defstyles defkeyframes]]
             [garden.units :as u :refer [px em rem]]
@@ -20,5 +20,4 @@
   {:vendors ["webkit" "moz" "o" "ms"]}
   [:div.control {:display "inline-block"
                  :padding-right (em 1)}]
-  sort-directions
-)
+  sort-directions)

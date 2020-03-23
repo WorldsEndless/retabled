@@ -1,4 +1,4 @@
-(defproject byu-odh/retabled "10"
+(defproject byu-odh/retabled "11"
   :description "Generate reagent-based tables for display and interaction with data collections"
   :url "http://tech.toryanderson.com"
   :license {:name "Eclipse Public License"
@@ -8,8 +8,8 @@
   :repositories [["releases" {:url "https://repo.clojars.org"
                               :creds :gpg}]]
   :garden {:builds [{:id "style"
-                     :source-path "test/clj/retabled/styles"
-                     :stylesheet retabled.styles.main/main
+                     :source-path "src/retabled"
+                     :stylesheet retabled.styles/main
                      :compiler {:output-to "test/resources/public/css/style.css"
                                 :pretty-print? true}}]}
   :profiles {:dev {:jvm-opts ["-server" "-Dconf=.lein-env"]

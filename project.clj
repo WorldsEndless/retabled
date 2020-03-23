@@ -1,4 +1,4 @@
-(defproject byu-odh/retabled "9"
+(defproject byu-odh/retabled "10"
   :description "Generate reagent-based tables for display and interaction with data collections"
   :url "http://tech.toryanderson.com"
   :license {:name "Eclipse Public License"

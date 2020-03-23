@@ -22,6 +22,7 @@
    :columns col-map-help
    :controls-left (fn [content] "fn of `content` to place before the paging controls (if any)")
    :controls-right (fn [content] "fn of `content` to place after the paging controls (if any)")
+   :default-styling? "If truthy, apply default styles such as direction indicators on sorts"
    :paging {:simple "If truthy, use a local atom and default setters and getters without bothering with anything else defined in `:paging`. "
             :get-current-screen (fn [] "Get the current screen num (0-based), from an atom or reframe, etc")
             :set-current-screen (fn [n] "Set current screen num. Default 0.")

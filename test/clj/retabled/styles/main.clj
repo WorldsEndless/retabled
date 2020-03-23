@@ -9,12 +9,16 @@
 ;;;;;;;;;;;;
 ;; STYLES ;;
 ;;;;;;;;;;;;
+(def sort-directions
+  [:body
+   [:.sorting-by-this.descending:after
+    {:content "\"▲\""}]
+   [:.sorting-by-this.ascending:after
+    {:content "\"▼\""}]])
+
 (defstyles main
   {:vendors ["webkit" "moz" "o" "ms"]}
   [:div.control {:display "inline-block"
                  :padding-right (em 1)}]
-  [:.sorting-by-this.descending:after
-   {:content "\"▲\""}]
-  [:.sorting-by-this.ascending:after
-   {:content "\"▼\""}]
+  sort-directions
 )

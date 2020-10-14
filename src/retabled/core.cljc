@@ -73,11 +73,14 @@
     results))
 
 (defn gen-filter
-  "Generate an input meant to filter a column"
+  "Generate an input meant to filter a column. `filter-address` is the key of this filter in `FILTER-MAP` and
+  may be a function, keyword, etc, as specified by `(:valfn col-map)`"
   [col-map]
-  (let [id (shared/idify (:headline col-map))]
+  (let [id (shared/idify (:headline col-map))
+        filter-address (:valfn col-map)]
     [:input.filter {:id (str id "_filter")
-                    :on-change #(swap! FILTER-MAP assoc (:valfn col-map) (shared/get-value-from-change %))}]))
+                    :value (or (@FILTER-MAP filter-address) "")
+                    :on-change #(swap! FILTER-MAP assoc filter-address (shared/get-value-from-change %))}]))
 
 (defn sort-click
   "Select sort field; if sort field unchanged, sort direction"

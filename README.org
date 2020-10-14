@@ -23,7 +23,7 @@ From [[https://github.com/BYU-ODH/retabled/blob/master/test/cljs/retabled/core_f
 By default only up to five results will be shown at a time on a table, with paging provided to get to next results. This can be changed by setting ={:paging nil}= in the control map (as well as other available paging options). 
 
 ** CHANGES
-*** V9
+*** V12
 Can programmatically change the filter buttons on a table
 *** V8
 Sorting now works with multiple tables on the same page (a closure was used instead of global var). 

@@ -16,8 +16,6 @@ From [[https://github.com/BYU-ODH/retabled/blob/master/test/cljs/retabled/core_f
   ;; The filter can programaticaly be changed like so:
   (swap! retabled.core/FILTER-MAP assoc retabled.core-front/my-valfn "2")
 #+end_src
-  ;; Because the second field has its `:valfn` as `my-valfn`, the filter can programaticaly be changed like so:
-  ;(swap! retabled.core/FILTER-MAP assoc retabled.core-front/my-valfn "2")
 
 *** Removing paging
 By default only up to five results will be shown at a time on a table, with paging provided to get to next results. This can be changed by setting ={:paging nil}= in the control map (as well as other available paging options). 

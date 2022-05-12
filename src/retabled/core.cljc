@@ -54,10 +54,13 @@
   [filter-map]
   (fn [filterable-map]
     (every? some?
-            (for [[k f] filter-map
-                 :let [field-filter-fn (cond
+            (for [[k fm] filter-map
+                  :let [f (:value fm)
+                        i? (:ignore-case? fm)
+                        re-string (if i? (str "(?i)" f) f)
+                        field-filter-fn (cond
                                           (fn? f) f
-                                          (string? f) (partial re-find (re-pattern (str "(?i)"  f))) ;; TODO right now ints treated as strings. Update this? 
+                                          (string? f) (partial re-find (re-pattern re-string)) ;; TODO right now ints treated as strings. Update this? 
                                           (int? f) #(= f %) ;Inline lambda
                                           :else (throw (ex-info "Invalid filter-fn given to generate-filter-fn" {:received {k f}})))]]
               (when-let [filterable-value (k filterable-map)]
@@ -78,10 +81,16 @@
   may be a function, keyword, etc, as specified by `(:valfn col-map)`"
   [col-map]
   (let [id (shared/idify (:headline col-map))
-        filter-address (:valfn col-map)]
+        filter-address #_(:valfn col-map)  [(:valfn col-map) :value]
+        ignore-case? (:ignore-case? col-map true)]
     [:input.filter {:id (str id "_filter")
-                    :value (or (@FILTER-MAP filter-address) "")
-                    :on-change #(swap! FILTER-MAP assoc filter-address (shared/get-value-from-change %))}])) ;Inline lambda
+                    :value (or (get-in @FILTER-MAP filter-address) "")
+                    :on-change #(swap! FILTER-MAP assoc-in filter-address (shared/get-value-from-change %))}])) ;Inline lambda
+
+(comment
+  {:name "Joe"
+   :name2 {:value "Joe"
+           :ignore-case? true}})
 
 (defn sort-click
   "Select sort field; if sort field unchanged, sort direction"

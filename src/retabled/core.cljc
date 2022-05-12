@@ -12,6 +12,7 @@
     :headline "The string to display in table header"
     :css-class-fn (fn [entry] "Produces class (str or vector) to be applied to field/column")
     :filter "If truthy displays a filter-bar that will perform on-change filtering on this column."
+    :ignore-case? "Whether to ignore the case during filtering"
     }])
 
 
@@ -57,7 +58,7 @@
                  :let [field-filter-fn (cond
                                           (fn? f) f
                                           (string? f) (partial re-find (re-pattern (str "(?i)"  f))) ;; TODO right now ints treated as strings. Update this? 
-                                          (int? f) #(= f %)
+                                          (int? f) #(= f %) ;Inline lambda
                                           :else (throw (ex-info "Invalid filter-fn given to generate-filter-fn" {:received {k f}})))]]
               (when-let [filterable-value (k filterable-map)]
                 (field-filter-fn (str filterable-value)))))))
@@ -80,13 +81,13 @@
         filter-address (:valfn col-map)]
     [:input.filter {:id (str id "_filter")
                     :value (or (@FILTER-MAP filter-address) "")
-                    :on-change #(swap! FILTER-MAP assoc filter-address (shared/get-value-from-change %))}]))
+                    :on-change #(swap! FILTER-MAP assoc filter-address (shared/get-value-from-change %))}])) ;Inline lambda
 
 (defn sort-click
   "Select sort field; if sort field unchanged, sort direction"
   [valfn SORT]
   (let [currently-selected (:selected @SORT)
-        swap-dir #(if (= <  %) > <)]
+        swap-dir #(if (= <  %) > <)] ;Inline lambda
     (if (not= currently-selected valfn)
       (swap! SORT assoc :selected valfn)
       (swap! SORT update :direction swap-dir))))
@@ -135,8 +136,8 @@
            num-columns]
     :or {num-columns 100}}]
   (let [current-screen-for-display (inc (get-current-screen))
-        prevfn #(max (dec (get-current-screen)) 0)
-        nextfn #(min (inc (get-current-screen)) (get-final-screen))]
+        prevfn #(max (dec (get-current-screen)) 0) ;Inline lambda
+        nextfn #(min (inc (get-current-screen)) (get-final-screen))] ;Inline lambda
     [:tr.row.screen-controls-row
      [:td.cell.screen-controls {:colSpan num-columns}
       left-bar-content
@@ -190,12 +191,12 @@
 (defn default-paging
   "Set up a local atom and define paging functions with reference to it"
   []
-  (let [paging {:get-current-screen #(:current-screen @DEFAULT-PAGE-ATOM)
-                :set-current-screen #(swap! DEFAULT-PAGE-ATOM assoc :current-screen %)                
-                :get-amount #(:per-screen @DEFAULT-PAGE-ATOM)
-                :set-amount #(swap! DEFAULT-PAGE-ATOM assoc :per-screen %)
-                :get-final-screen #(:final-screen @DEFAULT-PAGE-ATOM)
-                :set-final-screen #(swap! DEFAULT-PAGE-ATOM assoc :final-screen %)
+  (let [paging {:get-current-screen #(:current-screen @DEFAULT-PAGE-ATOM) ;Inline lambda
+                :set-current-screen #(swap! DEFAULT-PAGE-ATOM assoc :current-screen %) ;Inline lambda           
+                :get-amount #(:per-screen @DEFAULT-PAGE-ATOM) ;Inline lambda
+                :set-amount #(swap! DEFAULT-PAGE-ATOM assoc :per-screen %) ;Inline lambda
+                :get-final-screen #(:final-screen @DEFAULT-PAGE-ATOM) ;Inline lambda
+                :set-final-screen #(swap! DEFAULT-PAGE-ATOM assoc :final-screen %) ;Inline lambda
                 :r-content "‹"
                 :rr-content "«"
                 :f-content "›"

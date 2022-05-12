@@ -12,6 +12,7 @@
     :headline "The string to display in table header"
     :css-class-fn (fn [entry] "Produces class (str or vector) to be applied to field/column")
     :filter "If truthy displays a filter-bar that will perform on-change filtering on this column."
+    :click-to-filter "If truthy allows a user to filter by a clicking a value in the table"
     }])
 
 
@@ -81,6 +82,11 @@
     [:input.filter {:id (str id "_filter")
                     :value (or (@FILTER-MAP filter-address) "")
                     :on-change #(swap! FILTER-MAP assoc filter-address (shared/get-value-from-change %))}]))
+
+(defn click-to-filter
+  [col-map val]
+  (when (:click-to-filter col-map)
+    #(swap! FILTER-MAP assoc (:valfn col-map) val)))
 
 (defn sort-click
   "Select sort field; if sort field unchanged, sort direction"
@@ -166,7 +172,7 @@
                   (for [c columns :let [{:keys [valfn css-class-fn displayfn]
                                       :or {css-class-fn (constantly "field")
                                            displayfn identity}} c]]
-                   ^{:key c} [:td.cell {:class (css-class-fn e)}(-> e valfn displayfn)]))))))
+                   ^{:key c} [:td.cell {:class (css-class-fn e) :on-click (click-to-filter c (-> e valfn displayfn))} (-> e valfn displayfn)]))))))
 
 (defn ^{:private true} filtering
   "Filter entries according to `FILTER-MAP`"

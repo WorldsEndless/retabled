@@ -81,11 +81,11 @@
   may be a function, keyword, etc, as specified by `(:valfn col-map)`"
   [col-map]
   (let [id (shared/idify (:headline col-map))
-        filter-address #_(:valfn col-map)  [(:valfn col-map) :value]
-        ignore-case? (:ignore-case? col-map true)]
+        filter-address (:valfn col-map)  #_[(:valfn col-map) :value]]
     [:input.filter {:id (str id "_filter")
-                    :value (or (get-in @FILTER-MAP filter-address) "")
-                    :on-change #(swap! FILTER-MAP assoc-in filter-address (shared/get-value-from-change %))}])) ;Inline lambda
+                    :value (or (get-in @FILTER-MAP [filter-address :value]) "")
+                    :on-change #(swap! FILTER-MAP assoc filter-address {:value (shared/get-value-from-change %) :ignore-case? (:ignore-case? col-map true)})
+                    }])) ;Inline lambda
 
 (comment
   {:name "Joe"

@@ -78,7 +78,7 @@
                              :sort      true
                              :filter    true
                              }
-                            {:valfn     my-valfn
+                            {:valfn   my-valfn
                              :displayfn empty-link
                              :headline  "Name"
                              :sort      true
@@ -88,7 +88,7 @@
                              :sort     true
                              :filter true 
                              :headline "Job"}
-                            {:valfn    identity
+                            {:valfn    :guid
                              :sort     true
                              :sortfn   #(:guid %)
                              :headline "GUID"}]}
@@ -116,7 +116,7 @@
                              :sort     true
                              :filter true
                              :headline "Job"}
-                            {:valfn    identity
+                            {:valfn    :guid
                              :sort     true
                              :sortfn   #(:guid %)
                              :headline "GUID"}]}]

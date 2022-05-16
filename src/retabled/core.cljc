@@ -37,7 +37,6 @@
             :left-bar-content [:div.whatever "Stuff before the controls"]
             :right-bar-content [:div.whatever "Stuff after the controls"]}})
 
-(def FILTER-MAP (atom {}))
 (def PAGING (atom {:per-screen 5
                    :current-screen 0
                    :final-screen 0}))
@@ -75,12 +74,12 @@
 (defn gen-filter
   "Generate an input meant to filter a column. `filter-address` is the key of this filter in `FILTER-MAP` and
   may be a function, keyword, etc, as specified by `(:valfn col-map)`"
-  [col-map]
+  [col-map FILTER]
   (let [id (shared/idify (:headline col-map))
         filter-address (:valfn col-map)]
     [:input.filter {:id (str id "_filter")
-                    :value (or (@FILTER-MAP filter-address) "")
-                    :on-change #(swap! FILTER-MAP assoc filter-address (shared/get-value-from-change %))}]))
+                    :value (or (@FILTER filter-address) "")
+                    :on-change #(swap! FILTER assoc filter-address (shared/get-value-from-change %))}]))
 
 (defn sort-click
   "Select sort field; if sort field unchanged, sort direction"
@@ -109,12 +108,12 @@
        (catch #?(:clj Exception :cljs js/Error) _ false)))
 
 (defn ^{:private true} render-header-fields
-  [controls SORT]
+  [controls SORT FILTER]
   (into [:tr.table-headers.row]
         (for [c (:columns controls)
               :let [h  (cond->> (:headline c)
                          (:sort c) (gen-sort c SORT))
-                    fi (when (:filter c) (gen-filter c))]]
+                    fi (when (:filter c) (gen-filter c FILTER))]]
           [:th fi h])))
 
 (defn ^{:private true} render-screen-controls
@@ -149,11 +148,11 @@
 
 (defn generate-theads
   "generate the table headers"
-  [controls paging-controls SORT]
+  [controls paging-controls SORT FILTER]
   [:thead
    (when (:paging controls)
      (render-screen-controls paging-controls))
-   (render-header-fields controls SORT)])
+   (render-header-fields controls SORT FILTER)])
 
 (defn generate-rows
   "Generate all the rows of the table from `entries`, according to `controls`"
@@ -170,9 +169,9 @@
 
 (defn ^{:private true} filtering
   "Filter entries according to `FILTER-MAP`"
-  [entries]
+  [FILTER entries]
   (cond->> entries
-    (not-empty @FILTER-MAP) (filter-by-map @FILTER-MAP)))
+    (not-empty @FILTER) (filter-by-map @FILTER)))
 
 (defn ^{:private true} sorting
   "Sort given entries"
@@ -222,17 +221,18 @@
             (set-final-screen max-screens)
             (nth parted-entries (get-current-screen)))))
 
-(defn curate-entries [paging-controls entries SORT]
+(defn curate-entries [paging-controls entries SORT FILTER]
   (when (not-empty entries)
     (->> entries
          (paging paging-controls)
-         filtering
+         (filtering FILTER)
          (sorting SORT))))
 
 (defn table
   "Generate a table from `entries` according to headers and getter-fns in `controls`"
   [controls entries]
-  (let [SORT (atom default-sort)]
+  (let [SORT (atom default-sort)
+        FILTER (atom {})]
     (fn interior-table [controls entries]
       (let [paging-controls (cond (get-in controls [:paging :simple])
                                   (default-paging)
@@ -243,8 +243,8 @@
 
                                   :no-paging
                                   nil)
-            entries (curate-entries paging-controls entries SORT)]      
+            entries (curate-entries paging-controls entries SORT FILTER)]      
         [:table.table
-         [generate-theads controls paging-controls SORT]
+         [generate-theads controls paging-controls SORT FILTER]
          [generate-rows controls entries]]))))
 

@@ -3,10 +3,10 @@ div.control {
   padding-right: 1em;
 }
 
-.sorting-by-this.descending:after {
+body .sorting-by-this.descending:after {
   content: "▲";
 }
 
-.sorting-by-this.ascending:after {
+body .sorting-by-this.ascending:after {
   content: "▼";
 }

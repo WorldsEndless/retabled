@@ -1,4 +1,6 @@
 * retabled
+  =[byu-odh/retabled "12"]=
+
 ** Use
 Note that a present, while the library places appropriate style classes on elements, it doesn't provide style rules for those classes, so it is left up to the user. Styles are set up in accordance with [[https://bulma.io/documentation/elements/table/][bulma]], but are pretty generic. 
 
@@ -6,8 +8,29 @@ The basic usecase is =(retabled.core/table controls table-data)=. Table-data is 
 
 Full example is in our test, [[https://github.com/BYU-ODH/retabled/blob/master/test/cljs/retabled/core_front.cljs][retabled.core-front]]
 
-*** 
+*** Programatically set/change filters
+From [[https://github.com/BYU-ODH/retabled/blob/master/test/cljs/retabled/core_front.cljs][retabled.core-front]]:
+#+begin_src clojure
+  ;; Because the second table columns has its `:valfn` as `my-valfn`, 
+  ;; `retabled.core-front/myvalfn` is the address for the filter. 
+  ;; The filter can programaticaly be changed like so:
+  (swap! retabled.core/FILTER-MAP assoc retabled.core-front/my-valfn "2")
+#+end_src
+
+*** Removing paging
+By default only up to five results will be shown at a time on a table, with paging provided to get to next results. This can be changed by setting ={:paging nil}= in the control map (as well as other available paging options). 
+
 ** CHANGES
+*** V12
+Can programmatically change the filter buttons on a table
+*** V8
+Sorting now works with multiple tables on the same page (a closure was used instead of global var). 
+*** V7
+- Removed "#" linking for sorting; now using html5 absent hrefs. 
+*** V6
+- improved example, nil paging
+*** V5
+- sortfn bug fixes, sort direction indicated on sort style
 *** V4
 - sortfn key added to controls
 *** V3
@@ -23,11 +46,11 @@ Full example is in our test, [[https://github.com/BYU-ODH/retabled/blob/master/t
    :CUSTOM_ID: prerequisites
    :END:
 
-None. Just use this library.
+None. Just use this library. It will work better from the box with Bulma styles, though.
 
 ** License
    :PROPERTIES:
    :CUSTOM_ID: license
    :END:
 
-Copyright © 2018 Tory S. Anderson
+Copyright © 2018-2020 Brigham Young University

@@ -15,22 +15,45 @@
   (let [jobs ["programmer" "Dog catcher" "pizza deliverer" "pro-gamer"] ]
     (rand-nth jobs)))
 
-(def AMOUNT 15)
-
+(defn gen-table-data
+  "Generate `n` entries of random table data. Desc-map should have [key fun] pairs and fun will be evaluated each time to generate the data."
+  [n desc-map]
+  
+  (into []
+        (repeatedly n
+                    #(into {}
+                           (for [[k f] desc-map] [k (f)])))))
 
 (def table-data
-  (let [A (atom 0)]
-    (into [] (repeatedly AMOUNT (fn []
-                              {:name (str "John Doe " (swap! A inc))
-                               :job (random-job)
-                               :id @A
-                               :guid (rand-int 1000)})))))
+  (let [AMOUNT 2
+        A (atom 0)]
+    (r/atom (gen-table-data AMOUNT
+                            {:name #(str "John Doe " (swap! A inc))
+                             :job  random-job
+                             :id   #(deref A)
+                             :guid #(rand-int 1000)}))))
+
+#_(swap! table-data into
+         (gen-table-data 3
+                         {:name #(str "Jane Doe " (rand-int 5))
+                          :job  random-job
+                          :id (constantly "nonsense")
+                          :guid #(rand-int 1000)}))
+
+(def table-data2
+  (let [AMOUNT 8
+        A (atom 0)]
+    (r/atom (gen-table-data AMOUNT
+                            {:name #(str "Jane Dear " (swap! A inc))
+                             :job  random-job
+                             :id   #(deref A)
+                             :guid #(rand-int 1000)}))))
 
 
 (defn empty-link
   "Make an empty link thing for each entry with the text inside"
   [val]
-  [:a {:href val
+  [:a {:href     val
        :on-click #(js/alert (str "You clicked on " val))} val])
 
 (defn my-valfn
@@ -39,38 +62,76 @@
   (:name entry (:job entry)))
 
 (defn home-page []
-  (let [controls {:paging {:rr-content "First"
-                           :left-bar-content [:h3 {:style {:display "inline-block"
-                                                           :margin-right "1em"}} "I'm on the left"]
-                           :right-bar-content [:h3 "I'm on the right"]
-                           :get-amount (constantly (/ AMOUNT 3))}
-                  :columns [{:valfn identity
-                             :headline "ID"
-                             :sortfn (fn [entry] (let [id (:id entry) ]
-                                                   (cond
-                                                     (> 3 id) (- 5 id)
-                                                     (<= 2 id) id)))
-                             :sort true
-                             :filter true
+  ;; Because the second table columns has its `:valfn` as `my-valfn`, 
+  ;; `retabled.core-front/myvalfn` is the address for the filter. 
+  ;; The filter can programaticaly be changed like so:
+  ;; (swap! retabled.core/FILTER-MAP assoc retabled.core-front/my-valfn "2")
+                                        
+  (let [controls {:paging  nil #_{:rr-content        "First"
+                                  :get-amount        (constantly (/ AMOUNT 3))}
+                  :columns [{:valfn     identity
+                             :headline  "ID"
+                             :sortfn    (fn [entry] (let [id (:id entry) ]
+                                                      (cond
+                                                        (> 3 id)  (- 5 id)
+                                                        (<= 2 id) id)))
+                             :sort      true
+                             :filter    true
                              :displayfn #(:id %)}
-                            {:valfn my-valfn
+                            {:valfn     my-valfn
                              :displayfn empty-link
-                             :headline "Name"
-                             :sort true
-                             :filter true
+                             :headline  "Name"
+                             :sort      true
+                             :filter    true
                              }
-                            {:valfn :job
-                             :sort true
+                            {:valfn    :job
+                             :sort     true
+                             :filter   true
+                             :click-to-filter true
                              :headline "Job"}
-                            {:valfn identity
-                             :sort true
-                             :sortfn #(:guid %)
-                             :headline "GUID"}]} ]
+                            {:valfn    identity
+                             :sort     true
+                             :sortfn   #(:guid %)
+                             :headline "GUID"}]}
+        controls2 {:paging  nil #_{:rr-content        "First"
+                                  :left-bar-content  [:h3 {:style {:display      "inline-block"
+                                                                   :margin-right "1em"}} "I'm on the left"]
+                                  :right-bar-content [:h3 "I'm on the right"]
+                                  :get-amount        (constantly (/ AMOUNT 3))}
+                  :columns [{:valfn     identity
+                             :headline  "ID"
+                             :sortfn    (fn [entry] (let [id (:id entry) ]
+                                                      (cond
+                                                        (> 3 id)  (- 5 id)
+                                                        (<= 2 id) id)))
+                             :sort      true
+                             :filter    true
+                             :displayfn #(:id %)}
+                            {:valfn     my-valfn
+                             :displayfn empty-link
+                             :headline  "Name"
+                             :sort      true
+                             :filter    true
+                             }
+                            {:valfn    :job
+                             :sort     true
+                             :headline "Job"}
+                            {:valfn    identity
+                             :sort     true
+                             :sortfn   #(:guid %)
+                             :headline "GUID"}]}]
     [:div.content
      [:section.hero
       [:div.hero-body
        [:h1.title "Retabled"]]]
-     [ret/table controls table-data]
+     #_[:div.dat "My data:"
+      (prn-str @table-data)]
+     [:div.table1
+      [:h2.title "Table 1"]
+      [ret/table controls @table-data]]
+     #_[:div.table2
+        [:h2.title "Table 2"]
+        [ret/table controls2 @table-data2]]
      ]))
 
 (def pages

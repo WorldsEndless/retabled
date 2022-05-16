@@ -1,5 +1,5 @@
 ;; -*- eval: (rainbow-mode) -*-
-(ns retabled.styles.main
+(ns retabled.styles
   "Garden styles following the BYU schemes"
   (:require [garden.def :refer [defstylesheet defstyles defkeyframes]]
             [garden.units :as u :refer [px em rem]]
@@ -9,12 +9,15 @@
 ;;;;;;;;;;;;
 ;; STYLES ;;
 ;;;;;;;;;;;;
+(def sort-directions
+  [:body
+   [:.sorting-by-this.descending:after
+    {:content "\"▲\""}]
+   [:.sorting-by-this.ascending:after
+    {:content "\"▼\""}]])
+
 (defstyles main
   {:vendors ["webkit" "moz" "o" "ms"]}
   [:div.control {:display "inline-block"
                  :padding-right (em 1)}]
-  [:.sorting-by-this.descending:after
-   {:content "\"▲\""}]
-  [:.sorting-by-this.ascending:after
-   {:content "\"▼\""}]
-)
+  sort-directions)

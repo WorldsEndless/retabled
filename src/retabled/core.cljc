@@ -12,7 +12,10 @@
     :headline "The string to display in table header"
     :css-class-fn (fn [entry] "Produces class (str or vector) to be applied to field/column")
     :filter "If truthy displays a filter-bar that will perform on-change filtering on this column."
-    :click-to-filter "If truthy allows a user to filter by a clicking a value in the table"
+    :click-to-filter (fn [entry] "Should be a function returning a string 
+                                  or else valfn if it returns a string 
+                                  or else the displayfn if it returns a string
+                                  or throw an error")
     }])
 
 
@@ -83,10 +86,10 @@
                     :value (or (@FILTER-MAP filter-address) "")
                     :on-change #(swap! FILTER-MAP assoc filter-address (shared/get-value-from-change %))}]))
 
-(defn click-to-filter
-  [col-map val]
-  (when (:click-to-filter col-map)
-    #(swap! FILTER-MAP assoc (:valfn col-map) val)))
+(defn on-click-filter
+"Changes the filter value based on value clicked"
+  [col-valfn val]
+    #(swap! FILTER-MAP assoc col-valfn val))
 
 (defn sort-click
   "Select sort field; if sort field unchanged, sort direction"
@@ -161,18 +164,36 @@
      (render-screen-controls paging-controls))
    (render-header-fields controls SORT)])
 
+(defn resolve-click-to-filter
+  [controls entries]
+  (let [{:keys [click-to-filter valfn displayfn]} controls]
+    (cond
+      (and valfn (string? (valfn entries)))
+      (valfn entries)
+
+      (and displayfn (string? (displayfn entries)))
+      (displayfn entries)
+
+      (fn? click-to-filter)
+      (click-to-filter entries)
+
+      :else
+      (throw (ex-info "Unable to resolve click to filter" entries)))))
+
 (defn generate-rows
   "Generate all the rows of the table from `entries`, according to `controls`"
   [controls entries]
   (let [{:keys [row-class-fn columns]
-         :or {row-class-fn (constantly "row")}} controls ]
+         :or {row-class-fn (constantly "row")}} controls]
     (into [:tbody]
           (for [e entries :let [tr ^{:key e} [:tr {:class (row-class-fn e)}]]]
             (into tr
-                  (for [c columns :let [{:keys [valfn css-class-fn displayfn]
-                                      :or {css-class-fn (constantly "field")
-                                           displayfn identity}} c]]
-                   ^{:key c} [:td.cell {:class (css-class-fn e) :on-click (click-to-filter c (-> e valfn displayfn))} (-> e valfn displayfn)]))))))
+                  (for [c columns :let [{:keys [valfn css-class-fn displayfn click-to-filter]
+                                         :or {css-class-fn (constantly "field")
+                                              displayfn identity}} c
+                                        arg-map (cond-> {:class (css-class-fn e)}
+                                                  click-to-filter (assoc :on-click (on-click-filter valfn (resolve-click-to-filter c e))))]]
+                    ^{:key c} [:td.cell arg-map (-> e valfn displayfn)]))))))
 
 (defn ^{:private true} filtering
   "Filter entries according to `FILTER-MAP`"

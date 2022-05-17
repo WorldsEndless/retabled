@@ -1,6 +1,5 @@
-y(ns retabled.core
+(ns retabled.core
   (:require [retabled.filter :as filter]
-	    [retabled.sort :as sort]
             #?(:cljs [reagent.core :refer [atom]])
             [clojure.string :as str]))
 
@@ -42,6 +41,31 @@ y(ns retabled.core
                    :current-screen 0
                    :final-screen 0}))
 
+(def default-sort
+  "function to return a default sort map-atom"
+  {:selected nil
+   :direction <})
+
+(defn sort-click
+  "Select sort field; if sort field unchanged, sort direction"
+  [valfn SORT]
+  (let [currently-selected (:selected @SORT)
+        swap-dir #(if (= <  %) > <)]
+    (if (not= currently-selected valfn)
+      (swap! SORT assoc :selected valfn)
+      (swap! SORT update :direction swap-dir))))
+
+(defn gen-sort
+  "Render the title as a link that toggles sorting on this column"
+  [c SORT headline]
+  (let [sortfn (or (:sortfn c) (:valfn c))
+        sorting-this? (= sortfn (:selected @SORT))
+        sc (condp = (:direction @SORT)
+             < "ascending"
+             > "descending")
+        classes (when sorting-this? ["sorting-by-this" sc])]
+    [:a.sortable {:class classes :on-click #(sort-click sortfn SORT)} headline]))
+
 (defn atom?
   "ducktype an atom as something dereferable"
   [a]
@@ -53,7 +77,7 @@ y(ns retabled.core
   (into [:tr.table-headers.row]
         (for [c (:columns controls)
               :let [h  (cond->> (:headline c)
-                         (:sort c) (sort/gen-sort c SORT))
+                         (:sort c) (gen-sort c SORT))
                     fi (when (:filter c) (filter/gen-filter c))]]
           [:th fi h])))
 
@@ -108,6 +132,15 @@ y(ns retabled.core
                                            displayfn identity}} c]]
                    ^{:key c} [:td.cell {:class (css-class-fn e)}(-> e valfn displayfn)]))))))
 
+(defn ^{:private true} sorting
+  "Sort given entries"
+  [SORT entries]
+  (let [f (:selected @SORT)
+        dir (:direction @SORT)]
+    (if (and f dir)
+      (sort-by f dir entries)
+      entries)))
+
 (def DEFAULT-PAGE-ATOM (atom {:current-screen 0
                               :final-screen 0
                               :per-screen 5}))
@@ -152,12 +185,12 @@ y(ns retabled.core
     (->> entries
          (paging paging-controls)
          filter/filtering
-         (sort/sorting SORT))))
+         (sorting SORT))))
 
 (defn table
   "Generate a table from `entries` according to headers and getter-fns in `controls`"
   [controls entries]
-  (let [SORT (atom sort/default-sort)]
+  (let [SORT (atom default-sort)]
     (fn interior-table [controls entries]
       (let [paging-controls (cond (get-in controls [:paging :simple])
                                   (default-paging)

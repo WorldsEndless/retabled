@@ -1,4 +1,4 @@
-y(ns retabled.core
+(ns retabled.core
   (:require [retabled.filter :as filter]
 	    [retabled.sort :as sort]
             #?(:cljs [reagent.core :refer [atom]])

@@ -192,7 +192,8 @@
                                          :or {css-class-fn (constantly "field")
                                               displayfn identity}} c
                                         arg-map (cond-> {:class (css-class-fn e)}
-                                                  click-to-filter (assoc :on-click (on-click-filter valfn (resolve-click-to-filter c e))))]]
+                                                  click-to-filter (assoc :on-click (on-click-filter valfn (resolve-click-to-filter c e)))
+                                                  click-to-filter (assoc :class (str (css-class-fn e) " click-to-filter")))]]
                     ^{:key c} [:td.cell arg-map (-> e valfn displayfn)]))))))
 
 (defn ^{:private true} filtering

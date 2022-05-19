@@ -16,6 +16,7 @@
                                   or else valfn if it returns a string 
                                   or else the displayfn if it returns a string
                                   or throw an error")
+    :filter-in-url "If truthy the search query will be reflected in the url"
     }])
 
 

@@ -166,16 +166,16 @@
 
 (defn resolve-click-to-filter
   [controls entries]
-  (let [{:keys [click-to-filter valfn displayfn]} controls]
+  (let [{:keys [filter valfn displayfn]} controls]
     (cond
+      (fn? filter)
+      (filter entries)
+      
       (and valfn (string? (valfn entries)))
       (valfn entries)
 
       (and displayfn (string? (displayfn entries)))
       (displayfn entries)
-
-      (fn? click-to-filter)
-      (click-to-filter entries)
 
       :else
       (throw (ex-info "Unable to resolve click to filter" entries)))))
@@ -188,12 +188,12 @@
     (into [:tbody]
           (for [e entries :let [tr ^{:key e} [:tr {:class (row-class-fn e)}]]]
             (into tr
-                  (for [c columns :let [{:keys [valfn css-class-fn displayfn click-to-filter]
+                  (for [c columns :let [{:keys [valfn css-class-fn displayfn filter]
                                          :or {css-class-fn (constantly "field")
                                               displayfn identity}} c
                                         arg-map (cond-> {:class (css-class-fn e)}
-                                                  click-to-filter (assoc :on-click (on-click-filter valfn (resolve-click-to-filter c e)))
-                                                  click-to-filter (assoc :class (str (css-class-fn e) " click-to-filter")))]]
+                                                  (= filter :click-to-filter) (assoc :on-click (on-click-filter valfn (resolve-click-to-filter c e)))
+                                                  (= filter :click-to-filter) (assoc :class (str (css-class-fn e) filter)))]]
                     ^{:key c} [:td.cell arg-map (-> e valfn displayfn)]))))))
 
 (defn ^{:private true} filtering

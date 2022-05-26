@@ -86,8 +86,7 @@
                              }
                             {:valfn    :job
                              :sort     true
-                             :filter   true
-                             :click-to-filter true
+                             :filter   :click-to-filter
                              :headline "Job"}
                             {:valfn    identity
                              :sort     true

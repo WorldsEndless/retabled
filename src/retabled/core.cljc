@@ -164,13 +164,10 @@
      (render-screen-controls paging-controls))
    (render-header-fields controls SORT)])
 
-(defn resolve-click-to-filter
+(defn resolve-filter
   [controls entries]
-  (let [{:keys [filter valfn displayfn]} controls]
+  (let [{:keys [valfn displayfn]} controls]
     (cond
-      (fn? filter)
-      (filter entries)
-      
       (and valfn (string? (valfn entries)))
       (valfn entries)
 
@@ -178,7 +175,7 @@
       (displayfn entries)
 
       :else
-      (throw (ex-info "Unable to resolve click to filter" entries)))))
+      (throw (ex-info "Unable to resolve filter" entries)))))
 
 (defn generate-rows
   "Generate all the rows of the table from `entries`, according to `controls`"
@@ -192,8 +189,8 @@
                                          :or {css-class-fn (constantly "field")
                                               displayfn identity}} c
                                         arg-map (cond-> {:class (css-class-fn e)}
-                                                  (= filter :click-to-filter) (assoc :on-click (on-click-filter valfn (resolve-click-to-filter c e)))
-                                                  (= filter :click-to-filter) (assoc :class (str (css-class-fn e) filter)))]]
+                                                  (= filter :click-to-filter) (assoc :on-click (on-click-filter valfn (resolve-filter c e)))
+                                                  (= filter :click-to-filter) (assoc :class (str (css-class-fn e) " click-to-filter")))]]
                     ^{:key c} [:td.cell arg-map (-> e valfn displayfn)]))))))
 
 (defn ^{:private true} filtering

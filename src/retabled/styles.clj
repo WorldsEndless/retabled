@@ -20,4 +20,7 @@
   {:vendors ["webkit" "moz" "o" "ms"]}
   [:div.control {:display "inline-block"
                  :padding-right (em 1)}]
+  [:table
+   [:td.click-to-filter {:cursor :pointer}
+    [:&:hover {:text-decoration :underline}]]]
   sort-directions)

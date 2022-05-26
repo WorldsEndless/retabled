@@ -127,7 +127,7 @@
      [:div.table1
       [:h2.title "Table 1"]
       [ret/table controls @table-data]]
-     #_[:div.table2
+     [:div.table2
         [:h2.title "Table 2"]
         [ret/table controls2 @table-data2]]
      ]))

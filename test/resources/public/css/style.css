@@ -3,6 +3,14 @@ div.control {
   padding-right: 1em;
 }
 
+table td.click-to-filter {
+  cursor: pointer;
+}
+
+table td.click-to-filter:hover {
+  text-decoration: underline;
+}
+
 body .sorting-by-this.descending:after {
   content: "▲";
 }

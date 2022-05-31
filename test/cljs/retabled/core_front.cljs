@@ -86,7 +86,11 @@
                              }
                             {:valfn    :job
                              :sort     true
+<<<<<<< HEAD
                              :filter true 
+=======
+                             :filter   :click-to-filter
+>>>>>>> e931cb0306600caa7b748e078b88db4810d5895e
                              :headline "Job"}
                             {:valfn    :guid
                              :sort     true

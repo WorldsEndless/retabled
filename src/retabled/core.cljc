@@ -12,15 +12,11 @@
     :headline "The string to display in table header"
     :css-class-fn (fn [entry] "Produces class (str or vector) to be applied to field/column")
     :filter "If truthy displays a filter-bar that will perform on-change filtering on this column."
-<<<<<<< HEAD
     :ignore-case? "Whether to ignore the case during filtering"
-=======
     :click-to-filter (fn [entry] "Should be a function returning a string 
                                   or else valfn if it returns a string 
                                   or else the displayfn if it returns a string
-                                  or throw an error")
->>>>>>> e931cb0306600caa7b748e078b88db4810d5895e
-    }])
+                                  or throw an error")}])
 
 
 (def control-map-help
@@ -67,7 +63,7 @@
                         field-filter-fn (cond
                                           (fn? f) f
                                           (string? f) (partial re-find (re-pattern re-string)) ;; TODO right now ints treated as strings. Update this? 
-                                          (int? f) #(= f %) ;Inline lambda
+                                          (int? f) #(= f %)
                                           :else (throw (ex-info "Invalid filter-fn given to generate-filter-fn" {:received {k f}})))]]
               (when-let [filterable-value (k filterable-map)]
                 (field-filter-fn (str filterable-value)))))))
@@ -87,32 +83,21 @@
   may be a function, keyword, etc, as specified by `(:valfn col-map)`"
   [col-map FILTER]
   (let [id (shared/idify (:headline col-map))
-        filter-address (:valfn col-map)  #_[(:valfn col-map) :value]]
+        filter-address (:valfn col-map)]
     [:input.filter {:id (str id "_filter")
-<<<<<<< HEAD
-                    :value (or (get-in @FILTER-MAP [filter-address :value]) "")
-                    :on-change #(swap! FILTER-MAP assoc filter-address {:value (shared/get-value-from-change %) :ignore-case? (:ignore-case? col-map true)})
-                    }])) ;Inline lambda
-
-(comment
-  {:name "Joe"
-   :name2 {:value "Joe"
-           :ignore-case? true}})
-=======
-                    :value (or (@FILTER filter-address) "")
-                    :on-change #(swap! FILTER assoc filter-address (shared/get-value-from-change %))}]))
+                    :value (or (get-in @FILTER [filter-address :value]) "")
+                    :on-change #(swap! FILTER assoc filter-address {:value (shared/get-value-from-change %) :ignore-case? (:ignore-case? col-map true)})}]))
 
 (defn on-click-filter
 "Changes the filter value based on value clicked"
-  [col-valfn val]
-    #(swap! FILTER-MAP assoc col-valfn val))
->>>>>>> e931cb0306600caa7b748e078b88db4810d5895e
+  [col-valfn val FILTER]
+    #(swap! FILTER assoc col-valfn val))
 
 (defn sort-click
   "Select sort field; if sort field unchanged, sort direction"
   [valfn SORT]
   (let [currently-selected (:selected @SORT)
-        swap-dir #(if (= <  %) > <)] ;Inline lambda
+        swap-dir #(if (= <  %) > <)]
     (if (not= currently-selected valfn)
       (swap! SORT assoc :selected valfn)
       (swap! SORT update :direction swap-dir))))
@@ -161,8 +146,8 @@
            num-columns]
     :or {num-columns 100}}]
   (let [current-screen-for-display (inc (get-current-screen))
-        prevfn #(max (dec (get-current-screen)) 0) ;Inline lambda
-        nextfn #(min (inc (get-current-screen)) (get-final-screen))] ;Inline lambda
+        prevfn #(max (dec (get-current-screen)) 0)
+        nextfn #(min (inc (get-current-screen)) (get-final-screen))]
     [:tr.row.screen-controls-row
      [:td.cell.screen-controls {:colSpan num-columns}
       left-bar-content
@@ -196,7 +181,7 @@
 
 (defn generate-rows
   "Generate all the rows of the table from `entries`, according to `controls`"
-  [controls entries]
+  [controls entries FILTER]
   (let [{:keys [row-class-fn columns]
          :or {row-class-fn (constantly "row")}} controls]
     (into [:tbody]
@@ -206,12 +191,12 @@
                                          :or {css-class-fn (constantly "field")
                                               displayfn identity}} c
                                         arg-map (cond-> {:class (css-class-fn e)}
-                                                  (= filter :click-to-filter) (assoc :on-click (on-click-filter valfn (resolve-filter c e)))
+                                                  (= filter :click-to-filter) (assoc :on-click (on-click-filter valfn (resolve-filter c e) FILTER))
                                                   (= filter :click-to-filter) (assoc :class (str (css-class-fn e) " click-to-filter")))]]
                     ^{:key c} [:td.cell arg-map (-> e valfn displayfn)]))))))
 
 (defn ^{:private true} filtering
-  "Filter entries according to `FILTER-MAP`"
+  "Filter entries according to `FILTER`"
   [FILTER entries]
   (cond->> entries
     (not-empty @FILTER) (filter-by-map @FILTER)))
@@ -232,12 +217,12 @@
 (defn default-paging
   "Set up a local atom and define paging functions with reference to it"
   []
-  (let [paging {:get-current-screen #(:current-screen @DEFAULT-PAGE-ATOM) ;Inline lambda
-                :set-current-screen #(swap! DEFAULT-PAGE-ATOM assoc :current-screen %) ;Inline lambda           
-                :get-amount #(:per-screen @DEFAULT-PAGE-ATOM) ;Inline lambda
-                :set-amount #(swap! DEFAULT-PAGE-ATOM assoc :per-screen %) ;Inline lambda
-                :get-final-screen #(:final-screen @DEFAULT-PAGE-ATOM) ;Inline lambda
-                :set-final-screen #(swap! DEFAULT-PAGE-ATOM assoc :final-screen %) ;Inline lambda
+  (let [paging {:get-current-screen #(:current-screen @DEFAULT-PAGE-ATOM)
+                :set-current-screen #(swap! DEFAULT-PAGE-ATOM assoc :current-screen %)
+                :get-amount #(:per-screen @DEFAULT-PAGE-ATOM)
+                :set-amount #(swap! DEFAULT-PAGE-ATOM assoc :per-screen %)
+                :get-final-screen #(:final-screen @DEFAULT-PAGE-ATOM)
+                :set-final-screen #(swap! DEFAULT-PAGE-ATOM assoc :final-screen %)
                 :r-content "‹"
                 :rr-content "«"
                 :f-content "›"
@@ -289,5 +274,5 @@
             entries (curate-entries paging-controls entries SORT FILTER)]      
         [:table.table
          [generate-theads controls paging-controls SORT FILTER]
-         [generate-rows controls entries]]))))
+         [generate-rows controls entries FILTER]]))))
 

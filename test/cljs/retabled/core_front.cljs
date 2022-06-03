@@ -69,7 +69,7 @@
                                         
   (let [controls {:paging  nil #_{:rr-content        "First"
                                   :get-amount        (constantly (/ AMOUNT 3))}
-                  :columns [{:valfn     identity
+                  :columns [{:valfn   :id
                              :headline  "ID"
                              :sortfn    (fn [entry] (let [id (:id entry) ]
                                                       (cond
@@ -77,8 +77,8 @@
                                                         (<= 2 id) id)))
                              :sort      true
                              :filter    true
-                             :displayfn #(:id %)}
-                            {:valfn     my-valfn
+                             }
+                            {:valfn   my-valfn
                              :displayfn empty-link
                              :headline  "Name"
                              :sort      true
@@ -88,7 +88,7 @@
                              :sort     true
                              :filter   :click-to-filter
                              :headline "Job"}
-                            {:valfn    identity
+                            {:valfn    :guid
                              :sort     true
                              :sortfn   #(:guid %)
                              :headline "GUID"}]}
@@ -97,7 +97,7 @@
                                                                    :margin-right "1em"}} "I'm on the left"]
                                   :right-bar-content [:h3 "I'm on the right"]
                                   :get-amount        (constantly (/ AMOUNT 3))}
-                  :columns [{:valfn     identity
+                  :columns [{:valfn     :id
                              :headline  "ID"
                              :sortfn    (fn [entry] (let [id (:id entry) ]
                                                       (cond
@@ -105,7 +105,7 @@
                                                         (<= 2 id) id)))
                              :sort      true
                              :filter    true
-                             :displayfn #(:id %)}
+                             }
                             {:valfn     my-valfn
                              :displayfn empty-link
                              :headline  "Name"
@@ -114,8 +114,9 @@
                              }
                             {:valfn    :job
                              :sort     true
+                             :filter true
                              :headline "Job"}
-                            {:valfn    identity
+                            {:valfn    :guid
                              :sort     true
                              :sortfn   #(:guid %)
                              :headline "GUID"}]}]

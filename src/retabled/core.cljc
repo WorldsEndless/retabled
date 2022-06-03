@@ -13,7 +13,11 @@
     :headline "The string to display in table header"
     :css-class-fn (fn [entry] "Produces class (str or vector) to be applied to field/column")
     :filter "If truthy displays a filter-bar that will perform on-change filtering on this column."
-    }])
+    :ignore-case? "Whether to ignore the case during filtering"
+    :click-to-filter (fn [entry] "Should be a function returning a string 
+                                  or else valfn if it returns a string 
+                                  or else the displayfn if it returns a string
+                                  or throw an error")}])
 
 
 (def control-map-help
@@ -49,7 +53,7 @@
        (catch #?(:clj Exception :cljs js/Error) _ false)))
 
 (defn ^{:private true} render-header-fields
-  [controls SORT]
+  [controls SORT FILTER]
   (into [:tr.table-headers.row]
         (for [c (:columns controls)
               :let [h  (cond->> (:headline c)
@@ -89,24 +93,40 @@
 
 (defn generate-theads
   "generate the table headers"
-  [controls paging-controls SORT]
+  [controls paging-controls SORT FILTER]
   [:thead
    (when (:paging controls)
      (render-screen-controls paging-controls))
-   (render-header-fields controls SORT)])
+   (render-header-fields controls SORT FILTER)])
+
+(defn resolve-filter
+  [controls entries]
+  (let [{:keys [valfn displayfn]} controls]
+    (cond
+      (and valfn (string? (valfn entries)))
+      (valfn entries)
+
+      (and displayfn (string? (displayfn entries)))
+      (displayfn entries)
+
+      :else
+      (throw (ex-info "Unable to resolve filter" entries)))))
 
 (defn generate-rows
   "Generate all the rows of the table from `entries`, according to `controls`"
-  [controls entries]
+  [controls entries FILTER]
   (let [{:keys [row-class-fn columns]
-         :or {row-class-fn (constantly "row")}} controls ]
+         :or {row-class-fn (constantly "row")}} controls]
     (into [:tbody]
           (for [e entries :let [tr ^{:key e} [:tr {:class (row-class-fn e)}]]]
             (into tr
-                  (for [c columns :let [{:keys [valfn css-class-fn displayfn]
-                                      :or {css-class-fn (constantly "field")
-                                           displayfn identity}} c]]
-                   ^{:key c} [:td.cell {:class (css-class-fn e)}(-> e valfn displayfn)]))))))
+                  (for [c columns :let [{:keys [valfn css-class-fn displayfn filter]
+                                         :or {css-class-fn (constantly "field")
+                                              displayfn identity}} c
+                                        arg-map (cond-> {:class (css-class-fn e)}
+                                                  (= filter :click-to-filter) (assoc :on-click (on-click-filter valfn (resolve-filter c e) FILTER))
+                                                  (= filter :click-to-filter) (assoc :class (str (css-class-fn e) " click-to-filter")))]]
+                    ^{:key c} [:td.cell arg-map (-> e valfn displayfn)]))))))
 
 (def DEFAULT-PAGE-ATOM (atom {:current-screen 0
                               :final-screen 0
@@ -116,7 +136,7 @@
   "Set up a local atom and define paging functions with reference to it"
   []
   (let [paging {:get-current-screen #(:current-screen @DEFAULT-PAGE-ATOM)
-                :set-current-screen #(swap! DEFAULT-PAGE-ATOM assoc :current-screen %)                
+                :set-current-screen #(swap! DEFAULT-PAGE-ATOM assoc :current-screen %)
                 :get-amount #(:per-screen @DEFAULT-PAGE-ATOM)
                 :set-amount #(swap! DEFAULT-PAGE-ATOM assoc :per-screen %)
                 :get-final-screen #(:final-screen @DEFAULT-PAGE-ATOM)
@@ -147,7 +167,7 @@
             (set-final-screen max-screens)
             (nth parted-entries (get-current-screen)))))
 
-(defn curate-entries [paging-controls entries SORT]
+(defn curate-entries [paging-controls entries SORT FILTER]
   (when (not-empty entries)
     (->> entries
          (paging paging-controls)
@@ -157,7 +177,8 @@
 (defn table
   "Generate a table from `entries` according to headers and getter-fns in `controls`"
   [controls entries]
-  (let [SORT (atom sort/default-sort)]
+  (let [SORT (atom sort/default-sort)
+        FILTER (atom {})]
     (fn interior-table [controls entries]
       (let [paging-controls (cond (get-in controls [:paging :simple])
                                   (default-paging)
@@ -168,8 +189,8 @@
 
                                   :no-paging
                                   nil)
-            entries (curate-entries paging-controls entries SORT)]      
+            entries (curate-entries paging-controls entries SORT FILTER)]      
         [:table.table
-         [generate-theads controls paging-controls SORT]
-         [generate-rows controls entries]]))))
+         [generate-theads controls paging-controls SORT FILTER]
+         [generate-rows controls entries FILTER]]))))
 

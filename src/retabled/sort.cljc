@@ -25,7 +25,7 @@
         classes (when sorting-this? ["sorting-by-this" sc])]
     [:a.sortable {:class classes :on-click #(sort-click sortfn SORT)} headline]))
 
-(defn ^{:private true} sorting
+(defn sorting
   "Sort given entries"
   [SORT entries]
   (let [f (:selected @SORT)

@@ -67,7 +67,8 @@
   ;; The filter can programaticaly be changed like so:
   ;; (swap! retabled.core/FILTER-MAP assoc retabled.core-front/my-valfn "2")
                                         
-  (let [controls {:paging  nil #_{:rr-content        "First"
+  (let [controls {:table-id "table1"
+                  :paging  nil #_{:rr-content        "First"
                                   :get-amount        (constantly (/ AMOUNT 3))}
                   :columns [{:valfn     identity
                              :headline  "ID"
@@ -86,15 +87,14 @@
                              }
                             {:valfn    :job
                              :sort     true
-                             :filter   true
-                             :click-to-filter true
-                             :filter-in-url true
+                             :filter   :click-to-filter
                              :headline "Job"}
                             {:valfn    identity
                              :sort     true
                              :sortfn   #(:guid %)
                              :headline "GUID"}]}
-        controls2 {:paging  nil #_{:rr-content        "First"
+        controls2 {:table-id "table2"
+                   :paging  nil #_{:rr-content        "First"
                                   :left-bar-content  [:h3 {:style {:display      "inline-block"
                                                                    :margin-right "1em"}} "I'm on the left"]
                                   :right-bar-content [:h3 "I'm on the right"]
@@ -116,7 +116,8 @@
                              }
                             {:valfn    :job
                              :sort     true
-                             :headline "Job"}
+                             :headline "Job"
+                             :filter true}
                             {:valfn    identity
                              :sort     true
                              :sortfn   #(:guid %)
@@ -130,7 +131,7 @@
      [:div.table1
       [:h2.title "Table 1"]
       [ret/table controls @table-data]]
-     #_[:div.table2
+     [:div.table2
         [:h2.title "Table 2"]
         [ret/table controls2 @table-data2]]
      ]))

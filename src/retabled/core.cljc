@@ -1,7 +1,10 @@
 (ns retabled.core
-  (:require [retabled.shared :as shared]
+  (:require 
+            [clojure.string :as str]
             #?(:cljs [reagent.core :refer [atom]])
-            [clojure.string :as str]))
+            #?(:clj [clojure.edn :as reader]
+               :cljs [cljs.reader :as reader])
+            [retabled.shared :as shared]))
 
 (def col-map-help
   "Possible values of col-maps within `:columns` of control-map "
@@ -16,7 +19,6 @@
                                   or else valfn if it returns a string 
                                   or else the displayfn if it returns a string
                                   or throw an error")
-    :filter-in-url "If truthy the search query will be reflected in the url"
     }])
 
 
@@ -28,6 +30,7 @@
    :controls-left (fn [content] "fn of `content` to place before the paging controls (if any)")
    :controls-right (fn [content] "fn of `content` to place after the paging controls (if any)")
    :default-styling? "If truthy, apply default styles such as direction indicators on sorts"
+   :table-id "Allows for each table to have a unique ID"
    :paging {:simple "If truthy, use a local atom and default setters and getters without bothering with anything else defined in `:paging`. "
             :get-current-screen (fn [] "Get the current screen num (0-based), from an atom or reframe, etc")
             :set-current-screen (fn [n] "Set current screen num. Default 0.")
@@ -42,10 +45,33 @@
             :left-bar-content [:div.whatever "Stuff before the controls"]
             :right-bar-content [:div.whatever "Stuff after the controls"]}})
 
-(def FILTER-MAP (atom {}))
 (def PAGING (atom {:per-screen 5
                    :current-screen 0
                    :final-screen 0}))
+
+ 
+(defn map-from-url []
+  (let [search-string #?(:clj () :cljs js/window.location.search)]
+    (if-not
+     (empty? search-string)
+      (-> (str "{" search-string)
+          (str/replace  #"\?|&|=" {"?" ":" "&" "\" :" "=" " \""})
+          (str "\"}")
+          (reader/read-string))
+      {})))
+
+(def SEARCH-MAP (atom (map-from-url)))
+ #?(:cljs (js/console.log @SEARCH-MAP))
+
+(defn url-from-map []
+  (let [remove-nils (filter second @SEARCH-MAP)]
+    (str (str/join "&" (map (fn [[k v]] (str (name k) "=" v)) remove-nils)))))
+
+(defn search-in-url
+  []
+  (let [current-url #?(:clj () :cljs (str js/window.location.origin js/window.location.pathname))
+        search-string (str "?" (url-from-map))]
+    #?(:cljs (js/window.history.replaceState {}, "", (str current-url search-string)))))
 
 (def default-sort
   "function to return a default sort map-atom"
@@ -73,6 +99,7 @@
 
   Strings will be made into basic regexp."
   [filter-map map-coll]
+  #?(:cljs (js/console.log filter-map))
   (let [filter-fn (generate-filter-fn filter-map)
         results (filter filter-fn map-coll)]
     results))
@@ -80,17 +107,29 @@
 (defn gen-filter
   "Generate an input meant to filter a column. `filter-address` is the key of this filter in `FILTER-MAP` and
   may be a function, keyword, etc, as specified by `(:valfn col-map)`"
-  [col-map]
+  [col-map FILTER table-id]
   (let [id (shared/idify (:headline col-map))
-        filter-address (:valfn col-map)]
+        filter-address (:valfn col-map)
+        search-string (@SEARCH-MAP (keyword (str table-id "-" (:headline col-map))))]   
+   
+    
+    #?(:cljs (js/console.log (str "gen-filter " @SEARCH-MAP)))
     [:input.filter {:id (str id "_filter")
-                    :value (or (@FILTER-MAP filter-address) "")
-                    :on-change #(swap! FILTER-MAP assoc filter-address (shared/get-value-from-change %))}]))
+                    :value search-string
+                    :on-change (do
+                                 (search-in-url)
+                                 
+                                 
+                                 (if-not (nil? search-string)
+                                   (swap! FILTER assoc filter-address search-string)
+                                   ())
+                                 #(swap! SEARCH-MAP assoc (keyword (str table-id "-" (:headline col-map))) (shared/get-value-from-change %)))}]))
 
-(defn on-click-filter
-"Changes the filter value based on value clicked"
-  [col-valfn val]
-    #(swap! FILTER-MAP assoc col-valfn val))
+
+(defn on-click-filter 
+  "Changes the filter value based on value clicked"
+  [col-valfn val FILTER]
+  #(swap! FILTER assoc col-valfn val))
 
 (defn sort-click
   "Select sort field; if sort field unchanged, sort direction"
@@ -119,12 +158,13 @@
        (catch #?(:clj Exception :cljs js/Error) _ false)))
 
 (defn ^{:private true} render-header-fields
-  [controls SORT]
+  [controls SORT FILTER]
+  #?(:cljs (js/console.log (str "render-header-fields " @SEARCH-MAP)))
   (into [:tr.table-headers.row]
         (for [c (:columns controls)
               :let [h  (cond->> (:headline c)
                          (:sort c) (gen-sort c SORT))
-                    fi (when (:filter c) (gen-filter c))]]
+                    fi (when (:filter c) (gen-filter c FILTER (:table-id controls)))]]
           [:th fi h])))
 
 (defn ^{:private true} render-screen-controls
@@ -159,15 +199,15 @@
 
 (defn generate-theads
   "generate the table headers"
-  [controls paging-controls SORT]
+  [controls paging-controls SORT FILTER]
   [:thead
    (when (:paging controls)
      (render-screen-controls paging-controls))
-   (render-header-fields controls SORT)])
+   (render-header-fields controls SORT FILTER)])
 
-(defn resolve-click-to-filter
+(defn resolve-filter
   [controls entries]
-  (let [{:keys [click-to-filter valfn displayfn]} controls]
+  (let [{:keys [valfn displayfn]} controls]
     (cond
       (and valfn (string? (valfn entries)))
       (valfn entries)
@@ -175,33 +215,34 @@
       (and displayfn (string? (displayfn entries)))
       (displayfn entries)
 
-      (fn? click-to-filter)
-      (click-to-filter entries)
-
       :else
-      (throw (ex-info "Unable to resolve click to filter" entries)))))
+      (throw (ex-info "Unable to resolve filter" entries)))))
 
 (defn generate-rows
   "Generate all the rows of the table from `entries`, according to `controls`"
-  [controls entries]
+  [controls entries FILTER table-id]
   (let [{:keys [row-class-fn columns]
          :or {row-class-fn (constantly "row")}} controls]
+    #?(:cljs (js/console.log (str "generate-rows " @SEARCH-MAP)))
     (into [:tbody]
           (for [e entries :let [tr ^{:key e} [:tr {:class (row-class-fn e)}]]]
             (into tr
-                  (for [c columns :let [{:keys [valfn css-class-fn displayfn click-to-filter]
+                  (for [c columns :let [{:keys [valfn css-class-fn displayfn filter]
                                          :or {css-class-fn (constantly "field")
                                               displayfn identity}} c
                                         arg-map (cond-> {:class (css-class-fn e)}
-                                                  click-to-filter (assoc :on-click (on-click-filter valfn (resolve-click-to-filter c e)))
-                                                  click-to-filter (assoc :class (str (css-class-fn e) " click-to-filter")))]]
-                    ^{:key c} [:td.cell arg-map (-> e valfn displayfn)]))))))
+                                                  (= filter :click-to-filter) (assoc :on-click (on-click-filter valfn (resolve-filter c e) FILTER))
+                                                  (= filter :click-to-filter) (assoc :class (str (css-class-fn e) " click-to-filter")))]]
+                    
+                      
+
+                      ^{:key c} [:td.cell arg-map (-> e valfn displayfn)]))))))
 
 (defn ^{:private true} filtering
   "Filter entries according to `FILTER-MAP`"
-  [entries]
+  [FILTER entries]
   (cond->> entries
-    (not-empty @FILTER-MAP) (filter-by-map @FILTER-MAP)))
+    (not-empty @FILTER) (filter-by-map @FILTER)))
 
 (defn ^{:private true} sorting
   "Sort given entries"
@@ -251,17 +292,18 @@
             (set-final-screen max-screens)
             (nth parted-entries (get-current-screen)))))
 
-(defn curate-entries [paging-controls entries SORT]
+(defn curate-entries [paging-controls entries SORT FILTER]
   (when (not-empty entries)
     (->> entries
          (paging paging-controls)
-         filtering
+         (filtering FILTER)
          (sorting SORT))))
 
 (defn table
   "Generate a table from `entries` according to headers and getter-fns in `controls`"
   [controls entries]
-  (let [SORT (atom default-sort)]
+  (let [SORT (atom default-sort)
+        FILTER (atom {})]
     (fn interior-table [controls entries]
       (let [paging-controls (cond (get-in controls [:paging :simple])
                                   (default-paging)
@@ -272,8 +314,8 @@
 
                                   :no-paging
                                   nil)
-            entries (curate-entries paging-controls entries SORT)]      
+            entries (curate-entries paging-controls entries SORT FILTER)]
         [:table.table
-         [generate-theads controls paging-controls SORT]
-         [generate-rows controls entries]]))))
+         [generate-theads controls paging-controls SORT FILTER]
+         [generate-rows controls entries FILTER (:table-id controls)]]))))
 

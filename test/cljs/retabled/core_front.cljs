@@ -66,7 +66,7 @@
   ;; `retabled.core-front/myvalfn` is the address for the filter. 
   ;; The filter can programaticaly be changed like so:
   ;; (swap! retabled.core/FILTER-MAP assoc retabled.core-front/my-valfn "2")
-                                        
+                                    
   (let [controls {:paging  nil #_{:rr-content        "First"
                                   :get-amount        (constantly (/ AMOUNT 3))}
                   :columns [{:valfn   :id

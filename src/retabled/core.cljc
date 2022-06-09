@@ -177,7 +177,10 @@
                                   :no-paging
                                   nil)
             entries (curate-entries paging-controls entries SORT FILTER)]      
-        [:table.table
+        [:table.table {:style {"height" "500px"
+                               "width" "500px"
+                               "display" "inline-block"
+                               "overflow-y" "scroll"}}
          [generate-theads controls paging-controls SORT FILTER]
          [generate-rows controls entries FILTER]]))))
 

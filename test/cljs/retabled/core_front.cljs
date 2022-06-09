@@ -25,7 +25,7 @@
                            (for [[k f] desc-map] [k (f)])))))
 
 (def table-data
-  (let [AMOUNT 2
+  (let [AMOUNT 50
         A (atom 0)]
     (r/atom (gen-table-data AMOUNT
                             {:name #(str "John Doe " (swap! A inc))
@@ -129,7 +129,7 @@
      [:div.table1
       [:h2.title "Table 1"]
       [ret/table controls @table-data]]
-     [:div.table2
+     #_[:div.table2
         [:h2.title "Table 2"]
         [ret/table controls2 @table-data2]]
      ]))

@@ -54,7 +54,9 @@
 
 (defn ^{:private true} render-header-fields
   [controls SORT FILTER]
-  (into [:tr.table-headers.row]
+  (into [:tr.table-headers.row {:style {"position" "sticky"
+                                        "top" "0"
+                                        "backgroundColor" "white"}}]
         (for [c (:columns controls)
               :let [h  (cond->> (:headline c)
                          (:sort c) (sort/gen-sort c SORT))
@@ -117,7 +119,7 @@
 
 (def DEFAULT-PAGE-ATOM (atom {:current-screen 0
                               :final-screen 0
-                              :per-screen 5}))
+                              :per-screen 10}))
 
 (defn default-paging
   "Set up a local atom and define paging functions with reference to it"
@@ -161,6 +163,10 @@
          (filter/filtering FILTER)
          (sort/sorting SORT))))
 
+(defn on-scroll
+  []
+  (println "worked!"))
+
 (defn table
   "Generate a table from `entries` according to headers and getter-fns in `controls`"
   [controls entries]
@@ -177,10 +183,11 @@
                                   :no-paging
                                   nil)
             entries (curate-entries paging-controls entries SORT FILTER)]      
-        [:table.table {:style {"height" "500px"
-                               "width" "500px"
+        [:table.table {:style {"height" "450px"
+                               "width" "fit-content"
                                "display" "inline-block"
-                               "overflow-y" "scroll"}}
+                               "overflowY" "scroll"
+                               "marginBottom" "50px"}
+                       :onScroll on-scroll}
          [generate-theads controls paging-controls SORT FILTER]
          [generate-rows controls entries FILTER]]))))
-

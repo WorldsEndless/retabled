@@ -67,8 +67,8 @@
   ;; The filter can programaticaly be changed like so:
   ;; (swap! retabled.core/FILTER-MAP assoc retabled.core-front/my-valfn "2")
                                     
-  (let [controls {:paging  nil #_{:rr-content        "First"
-                                  :get-amount        (constantly (/ AMOUNT 3))}
+  (let [controls {:paging nil #_{:rr-content        "First"
+                            :get-amount        (constantly 15)}
                   :columns [{:valfn   :id
                              :headline  "ID"
                              :sortfn    (fn [entry] (let [id (:id entry) ]

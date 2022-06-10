@@ -42,7 +42,7 @@
             :left-bar-content [:div.whatever "Stuff before the controls"]
             :right-bar-content [:div.whatever "Stuff after the controls"]}})
 
-(def PAGING (atom {:per-screen 5
+(def PAGING (atom {:per-screen 10
                    :current-screen 0
                    :final-screen 0}))
 
@@ -163,10 +163,6 @@
          (filter/filtering FILTER)
          (sort/sorting SORT))))
 
-(defn on-scroll
-  []
-  (println "worked!"))
-
 (defn table
   "Generate a table from `entries` according to headers and getter-fns in `controls`"
   [controls entries]
@@ -187,7 +183,6 @@
                                "width" "fit-content"
                                "display" "inline-block"
                                "overflowY" "scroll"
-                               "marginBottom" "50px"}
-                       :onScroll on-scroll}
+                               "marginBottom" "50px"}}
          [generate-theads controls paging-controls SORT FILTER]
          [generate-rows controls entries FILTER]]))))

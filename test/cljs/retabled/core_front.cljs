@@ -67,7 +67,7 @@
   ;; The filter can programaticaly be changed like so:
   ;; (swap! retabled.core/FILTER-MAP assoc retabled.core-front/my-valfn "2")
                                         
-  (let [controls {:table-id "table1"
+  (let [controls {:table-id "table"
                   :paging  nil #_{:rr-content        "First"
                                   :get-amount        (constantly (/ AMOUNT 3))}
                   :columns [{:valfn     identity
@@ -93,35 +93,34 @@
                              :sort     true
                              :sortfn   #(:guid %)
                              :headline "GUID"}]}
-        controls2 {:table-id "table2"
+        controls2 {:table-id "table" 
                    :paging  nil #_{:rr-content        "First"
-                                  :left-bar-content  [:h3 {:style {:display      "inline-block"
-                                                                   :margin-right "1em"}} "I'm on the left"]
-                                  :right-bar-content [:h3 "I'm on the right"]
-                                  :get-amount        (constantly (/ AMOUNT 3))}
-                  :columns [{:valfn     identity
-                             :headline  "ID"
-                             :sortfn    (fn [entry] (let [id (:id entry) ]
-                                                      (cond
-                                                        (> 3 id)  (- 5 id)
-                                                        (<= 2 id) id)))
-                             :sort      true
-                             :filter    true
-                             :displayfn #(:id %)}
-                            {:valfn     my-valfn
-                             :displayfn empty-link
-                             :headline  "Name"
-                             :sort      true
-                             :filter    true
-                             }
-                            {:valfn    :job
-                             :sort     true
-                             :headline "Job"
-                             :filter true}
-                            {:valfn    identity
-                             :sort     true
-                             :sortfn   #(:guid %)
-                             :headline "GUID"}]}]
+                                   :left-bar-content  [:h3 {:style {:display      "inline-block"
+                                                                    :margin-right "1em"}} "I'm on the left"]
+                                   :right-bar-content [:h3 "I'm on the right"]
+                                   :get-amount        (constantly (/ AMOUNT 3))}
+                   :columns [{:valfn     identity
+                              :headline  "ID"
+                              :sortfn    (fn [entry] (let [id (:id entry)]
+                                                       (cond
+                                                         (> 3 id)  (- 5 id)
+                                                         (<= 2 id) id)))
+                              :sort      true
+                              :filter    true
+                              :displayfn #(:id %)}
+                             {:valfn     my-valfn
+                              :displayfn empty-link
+                              :headline  "Name"
+                              :sort      true
+                              :filter    true}
+                             {:valfn    :job
+                              :sort     true
+                              :headline "Job"
+                              :filter true}
+                             {:valfn    identity
+                              :sort     true
+                              :sortfn   #(:guid %)
+                              :headline "GUID"}]}]
     [:div.content
      [:section.hero
       [:div.hero-body

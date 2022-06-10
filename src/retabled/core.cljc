@@ -11,15 +11,14 @@
   [{:valfn (fn [entry] "Retrieves the value of this cell from `entry`")
     :sortfn (fn [entry] "Given an entry, how to sort it by this field. Defaults to `valfn`.")
     :displayfn (fn [valfn-value] "Produces the display from result `(valfn entry)`. 
-                                  Default `identity`" )
+                                  Default `identity`")
     :headline "The string to display in table header"
     :css-class-fn (fn [entry] "Produces class (str or vector) to be applied to field/column")
     :filter "If truthy displays a filter-bar that will perform on-change filtering on this column."
     :click-to-filter (fn [entry] "Should be a function returning a string 
                                   or else valfn if it returns a string 
                                   or else the displayfn if it returns a string
-                                  or throw an error")
-    }])
+                                  or throw an error")}])
 
 
 (def control-map-help
@@ -49,19 +48,17 @@
                    :current-screen 0
                    :final-screen 0}))
 
- 
 (defn map-from-url []
   (let [search-string #?(:clj () :cljs js/window.location.search)]
     (if-not
      (empty? search-string)
-      (-> (str "{" search-string)
-          (str/replace  #"\?|&|=" {"?" ":" "&" "\" :" "=" " \""})
-          (str "\"}")
-          (reader/read-string))
-      {})))
-
+      (-> search-string
+          (str/split #"[\? & =]")
+          rest
+          (->> (apply hash-map)))
+      {}))) 
+ 
 (def SEARCH-MAP (atom (map-from-url)))
- #?(:cljs (js/console.log @SEARCH-MAP))
 
 (defn url-from-map []
   (let [remove-nils (filter second @SEARCH-MAP)]
@@ -99,7 +96,6 @@
 
   Strings will be made into basic regexp."
   [filter-map map-coll]
-  #?(:cljs (js/console.log filter-map))
   (let [filter-fn (generate-filter-fn filter-map)
         results (filter filter-fn map-coll)]
     results))
@@ -110,20 +106,15 @@
   [col-map FILTER table-id]
   (let [id (shared/idify (:headline col-map))
         filter-address (:valfn col-map)
-        search-string (@SEARCH-MAP (keyword (str table-id "-" (:headline col-map))))]   
-   
-    
-    #?(:cljs (js/console.log (str "gen-filter " @SEARCH-MAP)))
+        search-string (@SEARCH-MAP (str table-id "-" (:headline col-map)))]   
     [:input.filter {:id (str id "_filter")
                     :value search-string
                     :on-change (do
                                  (search-in-url)
-                                 
-                                 
                                  (if-not (nil? search-string)
                                    (swap! FILTER assoc filter-address search-string)
                                    ())
-                                 #(swap! SEARCH-MAP assoc (keyword (str table-id "-" (:headline col-map))) (shared/get-value-from-change %)))}]))
+                                 #(swap! SEARCH-MAP assoc (str table-id "-" (:headline col-map))(shared/get-value-from-change %)))}]))
 
 
 (defn on-click-filter 
@@ -158,13 +149,12 @@
        (catch #?(:clj Exception :cljs js/Error) _ false)))
 
 (defn ^{:private true} render-header-fields
-  [controls SORT FILTER]
-  #?(:cljs (js/console.log (str "render-header-fields " @SEARCH-MAP)))
+  [controls SORT FILTER table-id]
   (into [:tr.table-headers.row]
         (for [c (:columns controls)
               :let [h  (cond->> (:headline c)
                          (:sort c) (gen-sort c SORT))
-                    fi (when (:filter c) (gen-filter c FILTER (:table-id controls)))]]
+                    fi (when (:filter c) (gen-filter c FILTER table-id))]]
           [:th fi h])))
 
 (defn ^{:private true} render-screen-controls
@@ -199,11 +189,11 @@
 
 (defn generate-theads
   "generate the table headers"
-  [controls paging-controls SORT FILTER]
+  [controls paging-controls SORT FILTER table-id]
   [:thead
    (when (:paging controls)
      (render-screen-controls paging-controls))
-   (render-header-fields controls SORT FILTER)])
+   (render-header-fields controls SORT FILTER table-id)])
 
 (defn resolve-filter
   [controls entries]
@@ -220,10 +210,9 @@
 
 (defn generate-rows
   "Generate all the rows of the table from `entries`, according to `controls`"
-  [controls entries FILTER table-id]
+  [controls entries FILTER]
   (let [{:keys [row-class-fn columns]
          :or {row-class-fn (constantly "row")}} controls]
-    #?(:cljs (js/console.log (str "generate-rows " @SEARCH-MAP)))
     (into [:tbody]
           (for [e entries :let [tr ^{:key e} [:tr {:class (row-class-fn e)}]]]
             (into tr
@@ -234,8 +223,6 @@
                                                   (= filter :click-to-filter) (assoc :on-click (on-click-filter valfn (resolve-filter c e) FILTER))
                                                   (= filter :click-to-filter) (assoc :class (str (css-class-fn e) " click-to-filter")))]]
                     
-                      
-
                       ^{:key c} [:td.cell arg-map (-> e valfn displayfn)]))))))
 
 (defn ^{:private true} filtering
@@ -299,12 +286,37 @@
          (filtering FILTER)
          (sorting SORT))))
 
+(def TABLE-NAME-COUNT (atom 0))
+
+(defn check-for-duplicates
+  [table-id]
+  (if (< 1 #?(:clj 0 :cljs (count (js/Array.from (js/document.querySelectorAll (str "#" table-id))))))
+    (throw #?(:clj (Exception. "multiple tables with the same table-id") :cljs (js/Error. "multiple tables with the same table-id")))
+    
+    ()))
+
+(defn generate-table-id
+  [table-id]
+  (try
+    (check-for-duplicates table-id)
+    (catch #?(:clj Exception :cljs js/Error) err
+           #?(:clj (println err) :cljs (js/console.error err)) ))
+  (if-not table-id
+    (do
+      (swap! TABLE-NAME-COUNT inc)
+      (str "__retabled-" @TABLE-NAME-COUNT))
+    table-id
+    ))
+   
 (defn table
   "Generate a table from `entries` according to headers and getter-fns in `controls`"
   [controls entries]
   (let [SORT (atom default-sort)
-        FILTER (atom {})]
+        FILTER (atom {})
+        table-id (generate-table-id (:table-id controls))]
+    
     (fn interior-table [controls entries]
+      
       (let [paging-controls (cond (get-in controls [:paging :simple])
                                   (default-paging)
 
@@ -315,7 +327,7 @@
                                   :no-paging
                                   nil)
             entries (curate-entries paging-controls entries SORT FILTER)]
-        [:table.table
-         [generate-theads controls paging-controls SORT FILTER]
-         [generate-rows controls entries FILTER (:table-id controls)]]))))
+        [:table.table {:id table-id}
+         [generate-theads controls paging-controls SORT FILTER table-id]
+         [generate-rows controls entries FILTER]]))))
 

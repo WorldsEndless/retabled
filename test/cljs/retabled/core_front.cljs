@@ -72,7 +72,7 @@
                                   :get-amount        (constantly (/ AMOUNT 3))}
                   :columns [{:valfn     identity
                              :headline  "ID"
-                             :sortfn    (fn [entry] (let [id (:id entry) ]
+                             :sortfn    (fn [entry] (let [id (:id entry)]
                                                       (cond
                                                         (> 3 id)  (- 5 id)
                                                         (<= 2 id) id)))
@@ -82,9 +82,9 @@
                             {:valfn     my-valfn
                              :displayfn empty-link
                              :headline  "Name"
+                             :filter-in-url false
                              :sort      true
-                             :filter    true
-                             }
+                             :filter    true}
                             {:valfn    :job
                              :sort     true
                              :filter   :click-to-filter
@@ -93,7 +93,8 @@
                              :sort     true
                              :sortfn   #(:guid %)
                              :headline "GUID"}]}
-        controls2 {:table-id "table" 
+        controls2 {:filter-in-url false
+                   :table-id "table2" 
                    :paging  nil #_{:rr-content        "First"
                                    :left-bar-content  [:h3 {:style {:display      "inline-block"
                                                                     :margin-right "1em"}} "I'm on the left"]
@@ -116,7 +117,7 @@
                              {:valfn    :job
                               :sort     true
                               :headline "Job"
-                              :filter true}
+                              :filter :click-to-filter}
                              {:valfn    identity
                               :sort     true
                               :sortfn   #(:guid %)

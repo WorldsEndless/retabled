@@ -8,6 +8,11 @@ The basic usecase is =(retabled.core/table controls table-data)=. Table-data is 
 
 Full example is in our test, [[https://github.com/BYU-ODH/retabled/blob/master/test/cljs/retabled/core_front.cljs][retabled.core-front]]
 
+*** What it looks like
+#+attr_html: :width 500px
+#+attr_latex: :width 500px
+[[./retabled-example.png]]
+
 *** Programatically set/change filters
 From [[https://github.com/BYU-ODH/retabled/blob/master/test/cljs/retabled/core_front.cljs][retabled.core-front]]:
 #+begin_src clojure
@@ -18,7 +23,7 @@ From [[https://github.com/BYU-ODH/retabled/blob/master/test/cljs/retabled/core_f
 #+end_src
 
 *** Removing paging
-By default only up to five results will be shown at a time on a table, with paging provided to get to next results. This can be changed by setting ={:paging nil}= in the control map (as well as other available paging options). 
+By default only up to ten results will be shown at a time on a table, with paging provided to get to next results. This can be changed by setting ={:paging nil}= in the control map (as well as other available paging options). 
 
 ** CHANGES
 *** V14

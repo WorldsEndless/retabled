@@ -54,14 +54,15 @@
 
 (defn ^{:private true} render-header-fields
   [controls SORT FILTER]
-  (into [:tr.table-headers.row {:style {"position" "sticky"
+  (into [:tr.table-headers.row {:style {
+                                        "position" "sticky"
                                         "top" "0"
                                         "backgroundColor" "white"}}]
         (for [c (:columns controls)
               :let [h  (cond->> (:headline c)
                          (:sort c) (sort/gen-sort c SORT))
                     fi (when (:filter c) (filter/gen-filter c FILTER))]]
-          [:th fi h])))
+          [:th {:style {"width" "20%"}} fi h])))
 
 (defn ^{:private true} render-screen-controls
   "Render the controls to edit this screen for results"
@@ -180,9 +181,11 @@
                                   nil)
             entries (curate-entries paging-controls entries SORT FILTER)]      
         [:table.table {:style {"height" "450px"
-                               "width" "fit-content"
-                               "display" "inline-block"
+                               "width" "1200px"
+                               "display" "block"
                                "overflowY" "scroll"
-                               "marginBottom" "50px"}}
+                               "overflowX" "scroll"
+                               "marginBottom" "50px"
+                               }}
          [generate-theads controls paging-controls SORT FILTER]
          [generate-rows controls entries FILTER]]))))

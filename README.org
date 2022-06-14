@@ -24,8 +24,13 @@ From [[https://github.com/BYU-ODH/retabled/blob/master/test/cljs/retabled/core_f
 
 *** Removing paging
 By default only up to ten results will be shown at a time on a table, with paging provided to get to next results. This can be changed by setting ={:paging nil}= in the control map (as well as other available paging options). 
-*** What retabled offers
+** What retabled offers
 In addition to other popular libraries, the retabled library allows the ability to page entries, sort entries by column, and filter entries by column. Unique to the retabled library, custom sort and paging functions can be used instead of the default. Additionally, filtering (a.k.a. searching) is optionally case insensitive.
+** Related libraries
+- Material Table
+- RSuite Table
+- React Table
+- Material UI Table
 
 ** CHANGES
 *** V14

@@ -13,6 +13,49 @@ Full example is in our test, [[https://github.com/BYU-ODH/retabled/blob/master/t
 #+attr_latex: :width 500px
 [[./retabled-example.png]]
 
+*** How to use
+Here is a simple example for building a table using the retabled library:
+#+begin_src clojure
+  (ns retabled.core-front
+  (:require [reagent.core :as r]
+	    [reagent.session :as session]
+	    [retabled.ajax :refer [load-interceptors!]]
+	    [retabled.core :as ret]
+	    [accountant.core :as accountant]))
+
+  (def table-data [{:id 1 :name "Dallin"} {:id 2 :name "Brynlee"}])
+
+  (defn home-page
+  []
+  (let [controls {:columns [{:valfn :id
+			     :headline "ID"}
+			    {:valfn :name
+			     :headline "Name"
+			     :filter true}]}]
+    [:div.table
+      [ret/table controls table-data]]))
+
+  (def pages
+  {:home #'home-page})
+
+  (defn page []
+  [(pages (session/get :page))])
+
+  (defn mount-components []
+  (r/render [#'page] (.getElementById js/document "app")))
+
+  (defn init! []
+  (load-interceptors!)  
+  (accountant/dispatch-current!)
+  (mount-components))
+#+end_src
+
+#+attr_html: :width 500px
+#+attr_latex: :width 500px
+[[./simple-example.png]]
+
+A more complex example can be found at [[https://github.com/BYU-ODH/retabled/blob/master/test/cljs/retabled/core_front.cljs][retabled.core-front]]
+
 *** Programatically set/change filters
 From [[https://github.com/BYU-ODH/retabled/blob/master/test/cljs/retabled/core_front.cljs][retabled.core-front]]:
 #+begin_src clojure

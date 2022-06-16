@@ -19,9 +19,7 @@ Here is a simple example for building a table using the retabled library:
   (ns retabled.core-front
   (:require [reagent.core :as r]
 	    [reagent.session :as session]
-	    [retabled.ajax :refer [load-interceptors!]]
-	    [retabled.core :as ret]
-	    [accountant.core :as accountant]))
+	    [retabled.core :as ret]))
 
   (def table-data [{:id 1 :name "Dallin"} {:id 2 :name "Brynlee"}])
 
@@ -45,8 +43,6 @@ Here is a simple example for building a table using the retabled library:
   (r/render [#'page] (.getElementById js/document "app")))
 
   (defn init! []
-  (load-interceptors!)  
-  (accountant/dispatch-current!)
   (mount-components))
 #+end_src
 
@@ -70,10 +66,10 @@ By default only up to ten results will be shown at a time on a table, with pagin
 ** What retabled offers
 In addition to other popular libraries, the retabled library allows the ability to page entries, sort entries by column, and filter entries by column. Unique to the retabled library, custom sort and paging functions can be used instead of the default. Additionally, filtering (a.k.a. searching) is optionally case insensitive.
 ** Related libraries
-- Material Table
-- RSuite Table
-- React Table
-- Material UI Table
+- [[https://material-table.com/#/][Material Table]]
+- [[https://rsuitejs.com/components/table/][RSuite Table]]
+- [[https://codesandbox.io/examples/package/react-table][React Table]]
+- [[https://mui.com/material-ui/react-table/][Material UI Table]]
 
 ** CHANGES
 *** V14

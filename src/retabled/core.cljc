@@ -18,7 +18,7 @@
                                   or else valfn if it returns a string 
                                   or else the displayfn if it returns a string
                                   or throw an error")
-    :table-scroll-bar? "If truthy, the table will take on default styling elements to accomadate for its own scroll bar (X and Y overflows)"}])
+    :table-scroll-bar? "If truthy, the table will have it's own scroll bars for any X or Y overflows"}])
 
 
 (def control-map-help
@@ -56,15 +56,14 @@
 (defn ^{:private true} render-header-fields
   [controls SORT FILTER]
   (into [:tr.table-headers.row (when (:table-scroll-bar? controls)
-                                 {:style {
-                                                                           "position" "sticky"
-                                                                           "top" "0"
-                                                                           "backgroundColor" "white"}})]
+                                 {:style {"position" "sticky"
+                                          "top" "0"
+                                          "backgroundColor" "white"}})]
         (for [c (:columns controls)
               :let [h  (cond->> (:headline c)
                          (:sort c) (sort/gen-sort c SORT))
                     fi (when (:filter c) (filter/gen-filter c FILTER))]]
-          [:th (when (:table-scroll-bar? controls){:style {"width" "20%"}}) fi h])))
+          [:th fi h])))
 
 (defn ^{:private true} render-screen-controls
   "Render the controls to edit this screen for results"
@@ -183,11 +182,11 @@
                                   nil)
             entries (curate-entries paging-controls entries SORT FILTER)]      
         [:table.table (when (:table-scroll-bar? controls)
-                        {:style {"height" "450px"
-                                 "width" "1200px"
+                        {:style {"height" "28em"
+                                 "width" "fit-content"
                                  "display" "block"
                                  "overflowY" "scroll"
                                  "overflowX" "scroll"
-                                 "marginBottom" "50px"}})
+                                 "marginBottom" "3em"}})
          [generate-theads controls paging-controls SORT FILTER]
          [generate-rows controls entries FILTER]]))))

@@ -89,6 +89,13 @@
       [:div.control.current-screen [:span.screen-num current-screen-for-display]]
       [:div.control.next [:a.control-label {:on-click #(set-current-screen (nextfn))} f-content]]
       [:div.control.final [:a.control-label {:on-click #(set-current-screen (get-final-screen))} ff-content]]
+      [:span.go-to "Go to"]
+      [:input.page-to-go {:style {"width" "3em"
+                                     "marginLeft" ".5em"}
+                          :on-change (fn [evt]
+                                       (let [val (int (-> evt .-target .-value))]
+                                         (when (and (> val 0)(<= val (+ (get-final-screen) 1)))
+                                           (set-current-screen (- val 1)))))}]
       right-bar-content]]))
 
 (defn generate-theads

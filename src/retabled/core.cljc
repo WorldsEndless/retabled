@@ -57,7 +57,7 @@
   [controls SORT FILTER]
   (into [:tr.table-headers.row (when (:table-scroll-bar? controls)
                                  {:style {"position" "sticky"
-                                          "top" "0"
+                                          "top" (if (:paging controls) "2em" "0")
                                           "backgroundColor" "white"}})]
         (for [c (:columns controls)
               :let [h  (cond->> (:headline c)
@@ -81,11 +81,15 @@
            left-bar-content
            right-bar-content
            num-columns]
-    :or {num-columns 100}}]
+    :or {num-columns 100}}
+   table-scroll-bar?]
   (let [current-screen-for-display (inc (get-current-screen))
         prevfn #(max (dec (get-current-screen)) 0)
         nextfn #(min (inc (get-current-screen)) (get-final-screen))]
-    [:tr.row.screen-controls-row
+    [:tr.row.screen-controls-row (when table-scroll-bar?
+                                 {:style {"position" "sticky"
+                                          "top" "0"
+                                          "backgroundColor" "white"}})
      [:td.cell.screen-controls {:colSpan num-columns}
       left-bar-content
       [:div.control.first [:a.control-label {:on-click #(set-current-screen 0)} rr-content]]
@@ -100,7 +104,7 @@
   [controls paging-controls SORT FILTER]
   [:thead
    (when (:paging controls)
-     (render-screen-controls paging-controls))
+     (render-screen-controls paging-controls (:table-scroll-bar? controls)))
    (render-header-fields controls SORT FILTER)])
 
 (defn generate-rows

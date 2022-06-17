@@ -84,11 +84,19 @@
     [:tr.row.screen-controls-row
      [:td.cell.screen-controls {:colSpan num-columns}
       left-bar-content
-      [:div.control.first [:a.control-label {:on-click #(set-current-screen 0)} rr-content]]
-      [:div.control.prev [:a.control-label {:on-click #(set-current-screen (prevfn))} r-content]]
+      [:div.control.first (if (not (= (get-current-screen) 0))
+                            [:a.control-label {:on-click #(set-current-screen 0)} rr-content]
+                            rr-content)]
+      [:div.control.prev (if (not (= (get-current-screen) 0))
+                           [:a.control-label {:on-click #(set-current-screen (prevfn))} r-content]
+                           r-content)]
       [:div.control.current-screen [:span.screen-num current-screen-for-display]]
-      [:div.control.next [:a.control-label {:on-click #(set-current-screen (nextfn))} f-content]]
-      [:div.control.final [:a.control-label {:on-click #(set-current-screen (get-final-screen))} ff-content]]
+      [:div.control.next (if (not (= (get-current-screen) (get-final-screen)))
+                           [:a.control-label {:on-click #(set-current-screen (nextfn))} f-content]
+                           f-content)]
+      [:div.control.final (if (not (= (get-current-screen) (get-final-screen)))
+                            [:a.control-label {:on-click #(set-current-screen (get-final-screen))} ff-content]
+                            ff-content)]
       [:span.go-to "Go to"]
       [:input.page-to-go {:style {"width" "3em"
                                      "marginLeft" ".5em"}

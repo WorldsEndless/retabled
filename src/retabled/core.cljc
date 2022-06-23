@@ -17,7 +17,8 @@
     :click-to-filter (fn [entry] "Should be a function returning a string 
                                   or else valfn if it returns a string 
                                   or else the displayfn if it returns a string
-                                  or throw an error")}])
+                                  or throw an error")
+    :table-scroll-bar? "If truthy, the table will have it's own scroll bars for any X or Y overflows"}])
 
 
 (def control-map-help
@@ -42,7 +43,7 @@
             :left-bar-content [:div.whatever "Stuff before the controls"]
             :right-bar-content [:div.whatever "Stuff after the controls"]}})
 
-(def PAGING (atom {:per-screen 5
+(def PAGING (atom {:per-screen 10
                    :current-screen 0
                    :final-screen 0}))
 
@@ -54,7 +55,10 @@
 
 (defn ^{:private true} render-header-fields
   [controls SORT FILTER]
-  (into [:tr.table-headers.row]
+  (into [:tr.table-headers.row (when (:table-scroll-bar? controls)
+                                 {:style {"position" "sticky"
+                                          "top" "0"
+                                          "backgroundColor" "white"}})]
         (for [c (:columns controls)
               :let [h  (cond->> (:headline c)
                          (:sort c) (sort/gen-sort c SORT))
@@ -124,7 +128,7 @@
 
 (def DEFAULT-PAGE-ATOM (atom {:current-screen 0
                               :final-screen 0
-                              :per-screen 5}))
+                              :per-screen 10}))
 
 (defn default-paging
   "Set up a local atom and define paging functions with reference to it"
@@ -184,7 +188,12 @@
                                   :no-paging
                                   nil)
             entries (curate-entries paging-controls entries SORT FILTER)]      
-        [:table.table
+        [:table.table (when (:table-scroll-bar? controls)
+                        {:style {"height" "28em"
+                                 "width" "fit-content"
+                                 "display" "block"
+                                 "overflowY" "scroll"
+                                 "overflowX" "scroll"
+                                 "marginBottom" "3em"}})
          [generate-theads controls paging-controls SORT FILTER]
          [generate-rows controls entries FILTER]]))))
-

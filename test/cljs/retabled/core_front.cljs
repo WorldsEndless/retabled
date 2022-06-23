@@ -25,7 +25,7 @@
                            (for [[k f] desc-map] [k (f)])))))
 
 (def table-data
-  (let [AMOUNT 2
+  (let [AMOUNT 50
         A (atom 0)]
     (r/atom (gen-table-data AMOUNT
                             {:name #(str "John Doe " (swap! A inc))
@@ -67,8 +67,8 @@
   ;; The filter can programaticaly be changed like so:
   ;; (swap! retabled.core/FILTER-MAP assoc retabled.core-front/my-valfn "2")
                                     
-  (let [controls {:paging  nil #_{:rr-content        "First"
-                                  :get-amount        (constantly (/ AMOUNT 3))}
+  (let [controls {:paging nil #_{:rr-content        "First"
+                            :get-amount        (constantly 15)}
                   :columns [{:valfn   :id
                              :headline  "ID"
                              :sortfn    (fn [entry] (let [id (:id entry) ]
@@ -91,7 +91,8 @@
                             {:valfn    :guid
                              :sort     true
                              :sortfn   #(:guid %)
-                             :headline "GUID"}]}
+                             :headline "GUID"}]
+                  :table-scroll-bar? true}
         controls2 {:paging  nil #_{:rr-content        "First"
                                   :left-bar-content  [:h3 {:style {:display      "inline-block"
                                                                    :margin-right "1em"}} "I'm on the left"]
@@ -129,7 +130,7 @@
      [:div.table1
       [:h2.title "Table 1"]
       [ret/table controls @table-data]]
-     [:div.table2
+     #_[:div.table2
         [:h2.title "Table 2"]
         [ret/table controls2 @table-data2]]
      ]))

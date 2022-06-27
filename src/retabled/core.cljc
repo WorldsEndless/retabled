@@ -17,8 +17,7 @@
     :click-to-filter (fn [entry] "Should be a function returning a string 
                                   or else valfn if it returns a string 
                                   or else the displayfn if it returns a string
-                                  or throw an error")
-    :table-scroll-bar? "If truthy, the table will have it's own scroll bars for any X or Y overflows"}])
+                                  or throw an error")}])
 
 
 (def control-map-help
@@ -41,7 +40,9 @@
             :f-content [:div.icon "next page"]
             :ff-content [:div.icon "final page"]
             :left-bar-content [:div.whatever "Stuff before the controls"]
-            :right-bar-content [:div.whatever "Stuff after the controls"]}})
+            :right-bar-content [:div.whatever "Stuff after the controls"]}
+   :table-scroll-bar {:fixed-columns {:first? "If truthy, the first column of the table will be fixed/sticky"
+                                      :last? "If truthy, the last column of the table will be fixed/sticky"}}})
 
 (def PAGING (atom {:per-screen 10
                    :current-screen 0
@@ -55,15 +56,23 @@
 
 (defn ^{:private true} render-header-fields
   [controls SORT FILTER]
-  (into [:tr.table-headers.row (when (:table-scroll-bar? controls)
+  (into [:tr.table-headers.row (when (:table-scroll-bar controls)
                                  {:style {"position" "sticky"
                                           "top" "0"
-                                          "backgroundColor" "white"}})]
+                                          "backgroundColor" "white"
+                                          "zIndex" "9999"}})]
         (for [c (:columns controls)
               :let [h  (cond->> (:headline c)
                          (:sort c) (sort/gen-sort c SORT))
                     fi (when (:filter c) (filter/gen-filter c FILTER))]]
-          [:th fi h])))
+          [:th (if (and (get-in controls [:table-scroll-bar :first?]) (= c (first (:columns controls))))
+                 {:style {"position" "sticky"
+                          "left" "0"
+                          "backgroundColor" "white"}}
+                 (if (and (get-in controls [:table-scroll-bar :last?]) (= c (last (:columns controls))))
+                  {:style {"position" "sticky"
+                           "right" "0"
+                           "backgroundColor" "white"}})) fi h])))
 
 (defn ^{:private true} render-screen-controls
   "Render the controls to edit this screen for results"
@@ -124,7 +133,16 @@
                                         arg-map (cond-> {:class (css-class-fn e)}
                                                   (= filter :click-to-filter) (assoc :on-click (filter/on-click-filter valfn (filter/resolve-filter c e) FILTER))
                                                   (= filter :click-to-filter) (assoc :class (str (css-class-fn e) " click-to-filter")))]]
-                    ^{:key c} [:td.cell arg-map (-> e valfn displayfn)]))))))
+                    ^{:key c} [:td.cell (if (and (get-in controls [:table-scroll-bar :first?]) (= c (first columns)))
+                                          (assoc arg-map :style {"position" "sticky"
+                                                                 "left" "0"
+                                                                 "backgroundColor" "white"})
+                                          (if (and (get-in controls [:table-scroll-bar :last?]) (= c (last columns)))
+                                            (assoc arg-map :style {"position" "sticky"
+                                                                   "right" "0"
+                                                                   "backgroundColor" "white"})
+                                            arg-map))
+                               (-> e valfn displayfn)]))))))
 
 (def DEFAULT-PAGE-ATOM (atom {:current-screen 0
                               :final-screen 0
@@ -188,7 +206,7 @@
                                   :no-paging
                                   nil)
             entries (curate-entries paging-controls entries SORT FILTER)]      
-        [:table.table (when (:table-scroll-bar? controls)
+        [:table.table (when (:table-scroll-bar controls)
                         {:style {"height" "28em"
                                  "width" "fit-content"
                                  "display" "block"

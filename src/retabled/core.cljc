@@ -84,20 +84,20 @@
     [:tr.row.screen-controls-row
      [:td.cell.screen-controls {:colSpan num-columns}
       left-bar-content
-      [:div.control.first [:a.control-label (if (not (= (get-current-screen) 0))
+      [:div.control.first [:a.control-label (if-not (= (get-current-screen) 0)
                                               {:on-click #(set-current-screen 0)}
                                               {:style {"color" "transparent"}})
                            rr-content]]
-      [:div.control.prev [:a.control-label (if (not (= (get-current-screen) 0))
+      [:div.control.prev [:a.control-label (if-not (= (get-current-screen) 0)
                                              {:on-click #(set-current-screen (prevfn))}
                                               {:style {"color" "transparent"}})
                           r-content]]
       [:div.control.current-screen [:span.screen-num current-screen-for-display]]
-      [:div.control.next [:a.control-label (if (not (= (get-current-screen) (get-final-screen)))
+      [:div.control.next [:a.control-label (if-not (= (get-current-screen) (get-final-screen))
                                              {:on-click #(set-current-screen (nextfn))}
                                               {:style {"color" "transparent"}})
                           f-content]]
-      [:div.control.final [:a.control-label (if (not (= (get-current-screen) (get-final-screen)))
+      [:div.control.final [:a.control-label (if-not (= (get-current-screen) (get-final-screen))
                                              {:on-click #(set-current-screen (get-final-screen))}
                                               {:style {"color" "transparent"}})
                            ff-content]]

@@ -92,7 +92,9 @@
                              :sort     true
                              :sortfn   #(:guid %)
                              :headline "GUID"}]
-                  :table-scroll-bar? true}
+                  :table-scroll-bar {:first? true
+                                     :last? true}
+                  }
         controls2 {:paging  nil #_{:rr-content        "First"
                                   :left-bar-content  [:h3 {:style {:display      "inline-block"
                                                                    :margin-right "1em"}} "I'm on the left"]

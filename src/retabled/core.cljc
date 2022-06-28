@@ -195,7 +195,7 @@
         [:table.table (when (:table-scroll-bar? controls)
                         {:style {"height" "28em"
                                  "width" "fit-content"
-                                 "max-width" "100%"
+                                 "maxWidth" "100%"
                                  "display" "block"
                                  "overflowY" "scroll"
                                  "overflowX" "scroll"

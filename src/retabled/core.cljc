@@ -63,7 +63,11 @@
               :let [h  (cond->> (:headline c)
                          (:sort c) (sort/gen-sort c SORT))
                     fi (when (:filter c) (filter/gen-filter c FILTER))]]
-          [:th fi h])))
+          [:th (if (or (and (:selected @SORT)(= (:sortfn c) (:selected @SORT)))
+                                                (= (:valfn c) (:selected @SORT))
+                                                (> (count (get-in @FILTER [(:valfn c) :value])) 0))
+                 {:style {"backgroundColor" "rgb(240, 240, 240)"}})
+           fi h])))
 
 (defn ^{:private true} render-screen-controls
   "Render the controls to edit this screen for results"
@@ -112,19 +116,24 @@
 
 (defn generate-rows
   "Generate all the rows of the table from `entries`, according to `controls`"
-  [controls entries FILTER]
+  [controls entries SORT FILTER]
   (let [{:keys [row-class-fn columns]
          :or {row-class-fn (constantly "row")}} controls]
     (into [:tbody]
           (for [e entries :let [tr ^{:key e} [:tr {:class (row-class-fn e)}]]]
             (into tr
-                  (for [c columns :let [{:keys [valfn css-class-fn displayfn filter]
+                  (for [c columns :let [{:keys [valfn css-class-fn displayfn filter]                                         
                                          :or {css-class-fn (constantly "field")
                                               displayfn identity}} c
                                         arg-map (cond-> {:class (css-class-fn e)}
                                                   (= filter :click-to-filter) (assoc :on-click (filter/on-click-filter valfn (filter/resolve-filter c e) FILTER))
                                                   (= filter :click-to-filter) (assoc :class (str (css-class-fn e) " click-to-filter")))]]
-                    ^{:key c} [:td.cell arg-map (-> e valfn displayfn)]))))))
+                    ^{:key c} [:td.cell (if (or (and (:selected @SORT)(= (:sortfn c) (:selected @SORT)))
+                                                (= valfn (:selected @SORT))
+                                                (> (count (get-in @FILTER [valfn :value])) 0))
+                                          (assoc arg-map :style {"backgroundColor" "rgb(240, 240, 240)"})
+                                          arg-map)
+                               (-> e valfn displayfn)]))))))
 
 (def DEFAULT-PAGE-ATOM (atom {:current-screen 0
                               :final-screen 0
@@ -196,4 +205,4 @@
                                  "overflowX" "scroll"
                                  "marginBottom" "3em"}})
          [generate-theads controls paging-controls SORT FILTER]
-         [generate-rows controls entries FILTER]]))))
+         [generate-rows controls entries SORT FILTER]]))))

@@ -82,14 +82,15 @@
            right-bar-content
            num-columns]
     :or {num-columns 100}}
-   table-scroll-bar?]
+   table-scroll-bar]
   (let [current-screen-for-display (inc (get-current-screen))
         prevfn #(max (dec (get-current-screen)) 0)
         nextfn #(min (inc (get-current-screen)) (get-final-screen))]
-    [:tr.row.screen-controls-row (when table-scroll-bar?
+    [:tr.row.screen-controls-row (when table-scroll-bar
                                  {:style {"position" "sticky"
                                           "top" "0"
-                                          "backgroundColor" "white"}})
+                                          "backgroundColor" "white"
+                                          "zIndex" "9999"}})
      [:td.cell.screen-controls {:colSpan num-columns}
       left-bar-content
       [:div.control.first [:a.control-label {:on-click #(set-current-screen 0)} rr-content]]
@@ -104,7 +105,7 @@
   [controls paging-controls SORT FILTER]
   [:thead
    (when (:paging controls)
-     (render-screen-controls paging-controls (:table-scroll-bar? controls)))
+     (render-screen-controls paging-controls (:table-scroll-bar controls)))
    (render-header-fields controls SORT FILTER)])
 
 (defn generate-rows

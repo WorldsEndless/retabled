@@ -9,15 +9,13 @@
   [{:valfn (fn [entry] "Retrieves the value of this cell from `entry`")
     :sortfn (fn [entry] "Given an entry, how to sort it by this field. Defaults to `valfn`.")
     :displayfn (fn [valfn-value] "Produces the display from result `(valfn entry)`. 
-                                  Default `identity`" )
+                                  Default `identity`")
     :headline "The string to display in table header"
     :css-class-fn (fn [entry] "Produces class (str or vector) to be applied to field/column")
-    :filter "If truthy displays a filter-bar that will perform on-change filtering on this column."
     :ignore-case? "Whether to ignore the case during filtering"
-    :click-to-filter (fn [entry] "Should be a function returning a string 
-                                  or else valfn if it returns a string 
-                                  or else the displayfn if it returns a string
-                                  or throw an error")}])
+    :filter "If truthy displays a filter-bar that will perform on-change filtering on this column.
+             If set to :click-to-filter, makes values searchable by clicking them"
+    :filter-in-url "If false turns off filtering in url for the column, by default true"}])
 
 
 (def control-map-help
@@ -28,6 +26,8 @@
    :controls-left (fn [content] "fn of `content` to place before the paging controls (if any)")
    :controls-right (fn [content] "fn of `content` to place after the paging controls (if any)")
    :default-styling? "If truthy, apply default styles such as direction indicators on sorts"
+   :table-id "Allows for each table to have a unique ID"
+   :filter-in-url "If false turns off filtering in url for the table, by default true"
    :paging {:simple "If truthy, use a local atom and default setters and getters without bothering with anything else defined in `:paging`. "
             :get-current-screen (fn [] "Get the current screen num (0-based), from an atom or reframe, etc")
             :set-current-screen (fn [n] "Set current screen num. Default 0.")
@@ -55,7 +55,7 @@
        (catch #?(:clj Exception :cljs js/Error) _ false)))
 
 (defn ^{:private true} render-header-fields
-  [controls SORT FILTER]
+  [controls SORT FILTER table-id]
   (into [:tr.table-headers.row (when (:table-scroll-bar controls)
                                  {:style {"position" "sticky"
                                           "zIndex" "1"
@@ -64,7 +64,7 @@
         (for [c (:columns controls)
               :let [h  (cond->> (:headline c)
                          (:sort c) (sort/gen-sort c SORT))
-                    fi (when (:filter c) (filter/gen-filter c FILTER))]]
+                    fi (when (:filter c) (filter/gen-filter c FILTER table-id (:filter-in-url controls)))]]
           [:th (assoc-in (if (and (get-in controls [:table-scroll-bar :first?]) (= c (first (:columns controls))))
                            {:style {"position" "sticky"
                                     "left" "0"
@@ -120,15 +120,15 @@
 
 (defn generate-theads
   "generate the table headers"
-  [controls paging-controls SORT FILTER]
+  [controls paging-controls SORT FILTER table-id]
   [:thead
    (when (:paging controls)
      (render-screen-controls paging-controls (:table-scroll-bar controls)))
-   (render-header-fields controls SORT FILTER)])
+   (render-header-fields controls SORT FILTER table-id)])
 
 (defn generate-rows
   "Generate all the rows of the table from `entries`, according to `controls`"
-  [controls entries FILTER]
+  [controls entries FILTER table-id]
   (let [{:keys [row-class-fn columns]
          :or {row-class-fn (constantly "row")}} controls]
     (into [:tbody]
@@ -138,7 +138,7 @@
                                          :or {css-class-fn (constantly "field")
                                               displayfn identity}} c
                                         arg-map (cond-> {:class (css-class-fn e)}
-                                                  (= filter :click-to-filter) (assoc :on-click (filter/on-click-filter valfn (filter/resolve-filter c e) FILTER))
+                                                  (= filter :click-to-filter) (assoc :on-click (filter/on-click-filter c table-id (:filter-in-url controls) FILTER (filter/resolve-filter c e)))
                                                   (= filter :click-to-filter) (assoc :class (str (css-class-fn e) " click-to-filter")))]]
                     ^{:key c} [:td.cell (assoc-in (if (and (get-in controls [:table-scroll-bar :first?]) (= c (first columns)))
                                                     (assoc arg-map :style {"position" "sticky"
@@ -169,8 +169,7 @@
                 :r-content "‹"
                 :rr-content "«"
                 :f-content "›"
-                :ff-content "»"
-                }]
+                :ff-content "»"}]
     paging))
 
 (defn ^{:private true} paging
@@ -199,12 +198,36 @@
          (filter/filtering FILTER)
          (sort/sorting SORT))))
 
+(def TABLE-NAME-COUNT (clojure.core/atom 0))
+
+(defn check-for-duplicates
+  [table-id]
+  (if (< 1 #?(:clj 0 :cljs (count (js/Array.from (js/document.querySelectorAll (str "#" table-id))))))
+    (throw #?(:clj (Exception. "multiple tables with the same table-id") :cljs (js/Error. "multiple tables with the same table-id")))
+    ()))
+
+(defn generate-table-id
+  [table-id]
+  #?(:cljs (js/console.log "generate-table-id call"))
+  (if-not table-id
+    (do
+      (swap! TABLE-NAME-COUNT inc)
+      (str "__retabled-" @TABLE-NAME-COUNT))
+    (do
+      (try
+        (check-for-duplicates table-id)
+        (catch #?(:clj Exception :cljs js/Error) err
+          #?(:clj (println err) :cljs (js/console.error err))))
+      table-id)))
+
 (defn table
   "Generate a table from `entries` according to headers and getter-fns in `controls`"
   [controls entries]
   (let [SORT (atom sort/default-sort)
-        FILTER (atom {})]
+        FILTER (atom {})
+        table-id (generate-table-id (:table-id controls))]
     (fn interior-table [controls entries]
+      
       (let [paging-controls (cond (get-in controls [:paging :simple])
                                   (default-paging)
 
@@ -214,14 +237,17 @@
 
                                   :no-paging
                                   nil)
-            entries (curate-entries paging-controls entries SORT FILTER)]      
-        [:table.table (when (:table-scroll-bar controls)
-                        {:style {"height" "28em"
+            entries (curate-entries paging-controls entries SORT FILTER)]
+        [:table.table {:id table-id
+                       :style (when (:table-scroll-bar controls)
+                                {"height" "28em"
                                  "width" "fit-content"
                                  "maxWidth" "100%"
                                  "display" "block"
                                  "overflowY" "scroll"
                                  "overflowX" "scroll"
-                                 "marginBottom" "3em"}})
-         [generate-theads controls paging-controls SORT FILTER]
-         [generate-rows controls entries FILTER]]))))
+                                 "marginBottom" "3em"})}
+
+
+         [generate-theads controls paging-controls SORT FILTER table-id]
+         [generate-rows controls entries FILTER table-id]]))))

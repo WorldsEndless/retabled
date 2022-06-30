@@ -48,13 +48,11 @@
                    :final-screen 0}))
 
 (defn map-from-url []
-  (let [search-string #?(:clj () :cljs js/window.location.search)]
+  (let [search-string #?(:clj () :cljs (.getDecodedQuery (goog.Uri. (.-location js/window))))]
     (if-not
      (empty? search-string)
-      (-> search-string
-          (str/replace "%20" " ")
-          (str/split #"[\?&=]")
-          rest
+      (-> search-string 
+          (str/split #"[&=]") 
           (->> (apply hash-map)))
       {})))
 
@@ -66,9 +64,10 @@
 
 (defn search-in-url
   []
-  (let [current-url #?(:clj () :cljs (str js/window.location.origin js/window.location.pathname))
-        search-string (str "?" (url-from-map))]
-    #?(:cljs (js/window.history.replaceState {}, "", (str current-url search-string)))))
+  (let [current-uri #?(:clj () :cljs (goog.Uri. (.-location js/window)))
+        search-string (url-from-map)
+        complete-uri (.setQuery current-uri (url-from-map))]
+    #?(:cljs (js/window.history.replaceState {}, "", (.toString complete-uri)))))
 
 (def default-sort
   "function to return a default sort map-atom"
@@ -84,7 +83,10 @@
             (for [[k f] filter-map
                   :let [field-filter-fn (cond
                                           (fn? f) f
-                                          (string? f) (partial re-find (re-pattern (str f))) ;; TODO right now ints treated as strings. Update this? 
+                                          (string? f) (try
+                                                        (partial re-find (re-pattern (str f)))
+                                                        #?(:clj (catch Exception e (str "caught exception: " (.getMessage e)) (partial re-find (re-pattern "")))
+                                                           :cljs (catch :default e (println "caught exception: " e) (partial re-find (re-pattern "")))));; TODO right now ints treated as strings. Update this? 
                                           (int? f) #(= f %)
                                           :else (throw (ex-info "Invalid filter-fn given to generate-filter-fn" {:received {k f}})))]]
               (when-let [filterable-value (k filterable-map)]

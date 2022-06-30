@@ -82,7 +82,6 @@
                             {:valfn     my-valfn
                              :displayfn empty-link
                              :headline  "Name"
-                             :filter-in-url false
                              :sort      true
                              :filter    true}
                             {:valfn    :job

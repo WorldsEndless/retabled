@@ -12,20 +12,20 @@
 (defn random-job
   "generate a random job"
   []
-  (let [jobs ["programmer" "Dog catcher" "pizza deliverer" "pro-gamer"] ]
+  (let [jobs ["programmer" "Dog catcher" "pizza deliverer" "pro-gamer"]]
     (rand-nth jobs)))
 
 (defn gen-table-data
   "Generate `n` entries of random table data. Desc-map should have [key fun] pairs and fun will be evaluated each time to generate the data."
   [n desc-map]
-  
+
   (into []
         (repeatedly n
                     #(into {}
                            (for [[k f] desc-map] [k (f)])))))
 
 (def table-data
-  (let [AMOUNT 2
+  (let [AMOUNT 50
         A (atom 0)]
     (r/atom (gen-table-data AMOUNT
                             {:name #(str "John Doe " (swap! A inc))
@@ -66,20 +66,18 @@
   ;; `retabled.core-front/myvalfn` is the address for the filter. 
   ;; The filter can programaticaly be changed like so:
   ;; (swap! retabled.core/FILTER-MAP assoc retabled.core-front/my-valfn "2")
-                                        
-  (let [controls {:table-id "table"
-                  :paging  nil #_{:rr-content        "First"
-                                  :get-amount        (constantly (/ AMOUNT 3))}
-                  :columns [{:valfn     identity
+
+  (let [controls {:paging nil #_{:rr-content        "First"
+                                 :get-amount        (constantly 15)}
+                  :columns [{:valfn   :id
                              :headline  "ID"
                              :sortfn    (fn [entry] (let [id (:id entry)]
                                                       (cond
                                                         (> 3 id)  (- 5 id)
                                                         (<= 2 id) id)))
                              :sort      true
-                             :filter    true
-                             :displayfn #(:id %)}
-                            {:valfn     my-valfn
+                             :filter    true}
+                            {:valfn   my-valfn
                              :displayfn empty-link
                              :headline  "Name"
                              :sort      true
@@ -88,26 +86,25 @@
                              :sort     true
                              :filter   :click-to-filter
                              :headline "Job"}
-                            {:valfn    identity
+                            {:valfn    :guid
                              :sort     true
                              :sortfn   #(:guid %)
-                             :headline "GUID"}]}
-        controls2 {:filter-in-url false
-                   :table-id "table2" 
-                   :paging  nil #_{:rr-content        "First"
+                             :headline "GUID"}]
+                  :table-scroll-bar {:first? true
+                                     :last? true}}
+        controls2 {:paging  nil #_{:rr-content        "First"
                                    :left-bar-content  [:h3 {:style {:display      "inline-block"
                                                                     :margin-right "1em"}} "I'm on the left"]
                                    :right-bar-content [:h3 "I'm on the right"]
                                    :get-amount        (constantly (/ AMOUNT 3))}
-                   :columns [{:valfn     identity
+                   :columns [{:valfn     :id
                               :headline  "ID"
                               :sortfn    (fn [entry] (let [id (:id entry)]
                                                        (cond
                                                          (> 3 id)  (- 5 id)
                                                          (<= 2 id) id)))
                               :sort      true
-                              :filter    true
-                              :displayfn #(:id %)}
+                              :filter    true}
                              {:valfn     my-valfn
                               :displayfn empty-link
                               :headline  "Name"
@@ -115,9 +112,9 @@
                               :filter    true}
                              {:valfn    :job
                               :sort     true
-                              :headline "Job"
-                              :filter :click-to-filter}
-                             {:valfn    identity
+                              :filter true
+                              :headline "Job"}
+                             {:valfn    :guid
                               :sort     true
                               :sortfn   #(:guid %)
                               :headline "GUID"}]}]
@@ -126,14 +123,13 @@
       [:div.hero-body
        [:h1.title "Retabled"]]]
      #_[:div.dat "My data:"
-      (prn-str @table-data)]
+        (prn-str @table-data)]
      [:div.table1
       [:h2.title "Table 1"]
       [ret/table controls @table-data]]
-     [:div.table2
+     #_[:div.table2
         [:h2.title "Table 2"]
-        [ret/table controls2 @table-data2]]
-     ]))
+        [ret/table controls2 @table-data2]]]))
 
 (def pages
   {:home #'home-page})
@@ -149,6 +145,6 @@
   (r/render [#'page] (.getElementById js/document "app")))
 
 (defn init! []
-  (load-interceptors!)  
+  (load-interceptors!)
   (accountant/dispatch-current!)
   (mount-components))

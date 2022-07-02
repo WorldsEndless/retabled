@@ -5,18 +5,42 @@
 
 (def FILTER-MAP (atom {}))
 
+
+(defn map-from-url []
+  (let [search-string #?(:clj () :cljs (.getDecodedQuery (goog.Uri. (.-location js/window))))]
+    (if-not
+     (empty? search-string)
+      (-> search-string
+          (str/split #"[&=]")
+          (->> (apply hash-map)))
+      {})))
+
+(def SEARCH-MAP (atom (map-from-url)))
+
+(defn url-from-map []
+  (let [remove-nils (remove (comp empty? second) @SEARCH-MAP)]
+    (str (str/join "&" (map (fn [[k v]] (str (name k) "=" v)) remove-nils)))))
+
+(defn search-in-url
+  []
+  (let [current-uri #?(:clj () :cljs (goog.Uri. (.-location js/window)))
+        search-string (url-from-map)
+        complete-uri (.setQuery current-uri (url-from-map))]
+    #?(:cljs (js/window.history.replaceState {}, "", (.toString complete-uri)))))
+
+
 (defn generate-filter-fn
   "Produce the function which compares a filter-map to a map and deems it good or not. If a :key in `filter-map` doesn't exist when filtering `filterable-map`, the filterable map will fail this function."
   [filter-map]
   (fn [filterable-map]
     (every? some?
-            (for [[k fm] filter-map
-                  :let [f (:value fm)
-                        i? (:ignore-case? fm)
-                        re-string (if i? (str "(?i)" f) f)
-                        field-filter-fn (cond
+            (for [[k f] filter-map
+                  :let [field-filter-fn (cond
                                           (fn? f) f
-                                          (string? f) (partial re-find (re-pattern re-string)) ;; TODO right now ints treated as strings. Update this? 
+                                          (string? f) (try
+                                                        (partial re-find (re-pattern (str f)))
+                                                        #?(:clj (catch Exception e (str "caught exception: " (.getMessage e)) (partial re-find (re-pattern "")))
+                                                           :cljs (catch :default e (println "caught exception: " e) (partial re-find (re-pattern "")))));; TODO right now ints treated as strings. Update this? 
                                           (int? f) #(= f %)
                                           :else (throw (ex-info "Invalid filter-fn given to generate-filter-fn" {:received {k f}})))]]
               (when-let [filterable-value (k filterable-map)]
@@ -34,12 +58,22 @@
 (defn gen-filter
   "Generate an input meant to filter a column. `filter-address` is the key of this filter in `FILTER-MAP` and
   may be a function, keyword, etc, as specified by `(:valfn col-map)`"
-  [col-map FILTER]
+  [col-map FILTER table-id filter-in-url]
   (let [id (shared/idify (:headline col-map))
-        filter-address (:valfn col-map)]
+        filter-address (:valfn col-map)
+        search-string (@SEARCH-MAP (str table-id "-" (:headline col-map)))]
     [:input.filter {:id (str id "_filter")
-                    :value (or (get-in @FILTER [filter-address :value]) "")
-                    :on-change #(swap! FILTER assoc filter-address {:value (shared/get-value-from-change %) :ignore-case? (:ignore-case? col-map true)})}]))
+                    :value (or search-string (@FILTER filter-address))
+                    :on-change (do
+                                 (search-in-url)
+                                 (if (false? filter-in-url)
+                                   #(swap! FILTER assoc filter-address (shared/get-value-from-change %))
+                                   (if (false? (:filter-in-url col-map))
+                                     #(swap! FILTER assoc filter-address (shared/get-value-from-change %))
+                                     (do
+                                       (when-not (nil? search-string)
+                                         (swap! FILTER assoc filter-address search-string))
+                                       #(swap! SEARCH-MAP assoc (str table-id "-" (:headline col-map)) (shared/get-value-from-change %))))))}]))
 
 (defn filtering
   "Filter entries according to `FILTER-MAP`"
@@ -48,9 +82,18 @@
     (not-empty @FILTER) (filter-by-map @FILTER)))
 
 (defn on-click-filter
-"Changes the filter value based on value clicked"
-  [col-valfn val FILTER]
-    #(swap! FILTER assoc col-valfn val))
+  "Changes the filter value based on value clicked"
+  [col-map table-id filter-in-url FILTER val]
+  (let [filter-address (:valfn col-map)
+        search-string (@SEARCH-MAP (str table-id "-" (:headline col-map)))]
+    (if (false? filter-in-url)
+      #(swap! FILTER assoc filter-address val)
+      (if (false? (:filter-in-url col-map))
+        #(swap! FILTER assoc filter-address val)
+        (do
+          (when-not (nil? search-string)
+            (swap! FILTER assoc filter-address search-string))
+          #(swap! SEARCH-MAP assoc (str table-id "-" (:headline col-map)) val))))))
 
 (defn resolve-filter
   [controls entries]

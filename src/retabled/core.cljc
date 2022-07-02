@@ -156,7 +156,7 @@
 
 (defn generate-rows
   "Generate all the rows of the table from `entries`, according to `controls`"
-  [controls entries FILTER table-id]
+  [controls entries SORT FILTER table-id]
   (let [{:keys [row-class-fn columns]
          :or {row-class-fn (constantly "row")}} controls]
     (into [:tbody]
@@ -286,4 +286,5 @@
         [:table.table (assoc {:id table-id} :style (when (:table-scroll-bar controls)
                         style-table))
          [generate-theads controls paging-controls SORT FILTER table-id]
-         [generate-rows controls entries SORT FILTER table-id]]))))                               
+         [generate-rows controls entries SORT FILTER table-id]]))))
+

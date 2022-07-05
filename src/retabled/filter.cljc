@@ -34,8 +34,9 @@
   [filter-map]
   (fn [filterable-map]
     (every? some?
-            (for [[k f] filter-map
-                  :let [i? (:ignore-case? f)
+            (for [[k fm] filter-map
+                  :let [f (:value fm)
+                        i? (:ignore-case? fm)
                         re-string (if i? (str "(?i)" f) f)
                         field-filter-fn (cond
                                           (fn? f) f
@@ -65,7 +66,7 @@
         filter-address (:valfn col-map)
         search-string (@SEARCH-MAP (str table-id "-" (:headline col-map)))]
     [:input.filter {:id (str id "_filter")
-                    :value (or search-string (@FILTER filter-address))
+                    :value (or (:value search-string) (@FILTER filter-address))
                     :on-change (do
                                  (search-in-url)
                                  (if (false? filter-in-url)
@@ -75,7 +76,7 @@
                                      (do
                                        (when-not (nil? search-string)
                                          (swap! FILTER assoc filter-address search-string))
-                                       #(swap! SEARCH-MAP assoc (str table-id "-" (:headline col-map)) (shared/get-value-from-change %))))))}]))
+                                       #(swap! SEARCH-MAP assoc (str table-id "-" (:headline col-map)) {:value (shared/get-value-from-change %) :ignore-case? (:ignore-case? col-map true)})))))}]))
 
 (defn filtering
   "Filter entries according to `FILTER-MAP`"

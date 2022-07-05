@@ -86,9 +86,10 @@
 
 (defn on-click-filter
   "Changes the filter value based on value clicked"
-  [col-map table-id filter-in-url FILTER val]
+  [col-map table-id filter-in-url FILTER value]
   (let [filter-address (:valfn col-map)
-        search-string (@SEARCH-MAP (str table-id "-" (:headline col-map)))]
+        search-string (@SEARCH-MAP (str table-id "-" (:headline col-map)))
+        val {:value value}]
     (if (false? filter-in-url)
       #(swap! FILTER assoc filter-address val)
       (if (false? (:filter-in-url col-map))

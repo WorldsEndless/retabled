@@ -18,7 +18,7 @@
 (def SEARCH-MAP (atom (map-from-url)))
 
 (defn url-from-map []
-  (let [remove-nils (remove (comp empty? second) @SEARCH-MAP)]
+  (let [remove-nils (remove (comp empty? :value second) @SEARCH-MAP)]
     (str (str/join "&" (map (fn [[k v]] (str (name k) "=" (:value v))) remove-nils)))))
 
 (defn search-in-url

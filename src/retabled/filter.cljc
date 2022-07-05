@@ -35,10 +35,12 @@
   (fn [filterable-map]
     (every? some?
             (for [[k f] filter-map
-                  :let [field-filter-fn (cond
+                  :let [i? (:ignore-case? f)
+                        re-string (if i? (str "(?i)" f) f)
+                        field-filter-fn (cond
                                           (fn? f) f
                                           (string? f) (try
-                                                        (partial re-find (re-pattern (str f)))
+                                                        (partial re-find (re-pattern re-string))
                                                         #?(:clj (catch Exception e (str "caught exception: " (.getMessage e)) (partial re-find (re-pattern "")))
                                                            :cljs (catch :default e (println "caught exception: " e) (partial re-find (re-pattern "")))));; TODO right now ints treated as strings. Update this? 
                                           (int? f) #(= f %)

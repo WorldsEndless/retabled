@@ -66,13 +66,13 @@
         filter-address (:valfn col-map)
         search-string (@SEARCH-MAP (str table-id "-" (:headline col-map)))]
     [:input.filter {:id (str id "_filter")
-                    :value (or (:value search-string) (@FILTER filter-address))
+                    :value (or (:value search-string) (get-in @FILTER [filter-address :value]))
                     :on-change (do
                                  (search-in-url)
                                  (if (false? filter-in-url)
-                                   #(swap! FILTER assoc filter-address (shared/get-value-from-change %))
+                                   #(swap! FILTER assoc filter-address {:value (shared/get-value-from-change %) :ignore-case? (:ignore-case? col-map true)})
                                    (if (false? (:filter-in-url col-map))
-                                     #(swap! FILTER assoc filter-address (shared/get-value-from-change %))
+                                     #(swap! FILTER assoc filter-address {:value (shared/get-value-from-change %) :ignore-case? (:ignore-case? col-map true)})
                                      (do
                                        (when-not (nil? search-string)
                                          (swap! FILTER assoc filter-address search-string))

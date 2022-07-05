@@ -9,10 +9,11 @@
 (defn map-from-url []
   (let [search-string #?(:clj () :cljs (.getDecodedQuery (goog.Uri. (.-location js/window))))]
     (if-not
-     (empty? search-string)
+        (empty? search-string)
       (-> search-string
           (str/split #"[&=]")
-          (->> (apply hash-map)))
+          (->> (apply hash-map))
+          (#(into {} (map (fn [[k v]] [k {:value v :ignore-case? true}])) %)))
       {})))
 
 (def SEARCH-MAP (atom (map-from-url)))
@@ -64,19 +65,20 @@
   [col-map FILTER table-id filter-in-url]
   (let [id (shared/idify (:headline col-map))
         filter-address (:valfn col-map)
-        search-string (@SEARCH-MAP (str table-id "-" (:headline col-map)))]
+        search-string (@SEARCH-MAP (str table-id "-" (:headline col-map)))
+        ignore-case? (:ignore-case? col-map true)]
     [:input.filter {:id (str id "_filter")
                     :value (or (:value search-string) (get-in @FILTER [filter-address :value]))
                     :on-change (do
                                  (search-in-url)
                                  (if (false? filter-in-url)
-                                   #(swap! FILTER assoc filter-address {:value (shared/get-value-from-change %) :ignore-case? (:ignore-case? col-map true)})
+                                   #(swap! FILTER assoc filter-address {:value (shared/get-value-from-change %) :ignore-case? ignore-case?})
                                    (if (false? (:filter-in-url col-map))
-                                     #(swap! FILTER assoc filter-address {:value (shared/get-value-from-change %) :ignore-case? (:ignore-case? col-map true)})
+                                     #(swap! FILTER assoc filter-address {:value (shared/get-value-from-change %)  :ignore-case? ignore-case?})
                                      (do
                                        (when-not (nil? search-string)
                                          (swap! FILTER assoc filter-address search-string))
-                                       #(swap! SEARCH-MAP assoc (str table-id "-" (:headline col-map)) {:value (shared/get-value-from-change %) :ignore-case? (:ignore-case? col-map true)})))))}]))
+                                       #(swap! SEARCH-MAP assoc (str table-id "-" (:headline col-map)) {:value (shared/get-value-from-change %) :ignore-case? ignore-case?})))))}]))
 
 (defn filtering
   "Filter entries according to `FILTER-MAP`"

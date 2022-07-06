@@ -56,11 +56,7 @@
 
 (defn ^{:private true} render-header-fields
   [controls SORT FILTER table-id]
-  (into [:tr.table-headers.row (when (:table-scroll-bar controls)
-                                 {:style {"position" "sticky"
-                                          "zIndex" "1"
-                                          "top" (if (:paging controls) "2em" "0")
-                                          "backgroundColor" "white"}})]
+  (into [:tr.table-headers.row]
         (for [c (:columns controls)
               :let [h  (cond->> (:headline c)
                          (:sort c) (sort/gen-sort c SORT))
@@ -97,31 +93,31 @@
   (let [current-screen-for-display (inc (get-current-screen))
         prevfn #(max (dec (get-current-screen)) 0)
         nextfn #(min (inc (get-current-screen)) (get-final-screen))]
-    [:tr.row.screen-controls-row (when table-scroll-bar
-                                 {:style {"position" "sticky"
-                                          "top" "0"
-                                          "backgroundColor" "white"
-                                          "zIndex" "9999"}})
-     [:td.cell.screen-controls {:colSpan num-columns}
-      left-bar-content
-      [:div.control.first [:a.control-label {:on-click #(set-current-screen 0)} rr-content]]
-      [:div.control.prev [:a.control-label {:on-click #(set-current-screen (prevfn))} r-content]]
-      [:div.control.current-screen [:span.screen-num current-screen-for-display]]
-      [:div.control.next [:a.control-label {:on-click #(set-current-screen (nextfn))} f-content]]
-      [:div.control.final [:a.control-label {:on-click #(set-current-screen (get-final-screen))} ff-content]]
-      [:span.go-to "Go to"]
-      [:input.page-to-go {:style {"width" "3em"
-                                     "marginLeft" ".5em"}
-                          :on-change (fn [evt]
-                                       (let [val (int (-> evt .-target .-value))]
-                                         (when (and (> val 0)(<= val (+ (get-final-screen) 1)))
-                                           (set-current-screen (- val 1)))))}]
+    [:tr.row.screen-controls-row 
+     [:td.cell.screen-controls {:colSpan num-columns :style {"borderColor" "white"}}
+      [:div.control {:style {"position" "sticky" "left" "1em"}}
+       left-bar-content
+       [:div.control.first [:a.control-label {:on-click #(set-current-screen 0)} rr-content]]
+       [:div.control.prev [:a.control-label {:on-click #(set-current-screen (prevfn))} r-content]]
+       [:div.control.current-screen [:span.screen-num current-screen-for-display]]
+       [:div.control.next [:a.control-label {:on-click #(set-current-screen (nextfn))} f-content]]
+       [:div.control.final [:a.control-label {:on-click #(set-current-screen (get-final-screen))} ff-content]]
+       [:span.go-to "Go to"]
+       [:input.page-to-go {:style {"width" "3em"
+                                   "marginLeft" ".5em"}
+                           :on-change (fn [evt]
+                                        (let [val (int (-> evt .-target .-value))]
+                                          (when (and (> val 0)(<= val (+ (get-final-screen) 1)))
+                                            (set-current-screen (- val 1)))))}]]
       right-bar-content]]))
 
 (defn generate-theads
   "generate the table headers"
   [controls paging-controls SORT FILTER table-id]
-  [:thead
+  [:thead {:style {"position" "sticky"
+                   "top" "0"
+                   "backgroundColor" "white"
+                   "zIndex" "1"}}
    (when (:paging controls)
      (render-screen-controls paging-controls (:table-scroll-bar controls)))
    (render-header-fields controls SORT FILTER table-id)])
@@ -246,7 +242,8 @@
                                  "display" "block"
                                  "overflowY" "scroll"
                                  "overflowX" "scroll"
-                                 "marginBottom" "3em"})}
+                                 "marginBottom" "3em"
+                                 "borderCollapse" "separate"})}
 
 
          [generate-theads controls paging-controls SORT FILTER table-id]

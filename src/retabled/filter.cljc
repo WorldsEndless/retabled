@@ -13,7 +13,7 @@
       (-> search-string
           (str/split #"[&=]")
           (->> (apply hash-map))
-          (#(into {} (map (fn [[k v]] [k {:value v :ignore-case? true}])) %)))
+          (#(into {} (map (fn [[k v]] [k {:value v}])) %)))
       {})))
 
 (def SEARCH-MAP (atom (map-from-url)))
@@ -63,6 +63,8 @@
   "Generate an input meant to filter a column. `filter-address` is the key of this filter in `FILTER-MAP` and
   may be a function, keyword, etc, as specified by `(:valfn col-map)`"
   [col-map FILTER table-id filter-in-url]
+  (when (contains? @SEARCH-MAP (str table-id "-" (:headline col-map)))
+    (swap! SEARCH-MAP assoc-in [(str table-id "-" (:headline col-map)) :ignore-case?] (:ignore-case? col-map true)))
   (let [id (shared/idify (:headline col-map))
         filter-address (:valfn col-map)
         search-string (@SEARCH-MAP (str table-id "-" (:headline col-map)))

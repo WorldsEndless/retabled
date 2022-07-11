@@ -55,17 +55,12 @@
 
 (defn ^{:private true} render-header-fields
   [controls SORT FILTER table-id]
-  (let [style-table-scroll-bar {:style {"position" "sticky"
-                                        "top" (if (:paging controls) "2em" "0")
-                                        "backgroundColor" "white"
-                                        "zIndex" "1"}}]
-    (into [:tr.table-headers.row (when (:table-scroll-bar controls)
-                                   style-table-scroll-bar)]
-          (for [c (:columns controls)
-                :let [h  (cond->> (:headline c)
-                           (:sort c) (sort/gen-sort c SORT))
-                      fi (when (:filter c) (filter/gen-filter c FILTER table-id (:filter-in-url controls)))
-                      style-first-column-fixed {:style {"position" "sticky"
+  (into [:tr.table-headers.row]
+        (for [c (:columns controls)
+              :let [h  (cond->> (:headline c)
+                         (:sort c) (sort/gen-sort c SORT))
+                    fi (when (:filter c) (filter/gen-filter c FILTER table-id (:filter-in-url controls)))
+                    style-first-column-fixed {:style {"position" "sticky"
                                                         "left" "0"
                                                         "backgroundColor" "white"}}
                       style-last-column-fixed {:style {"position" "sticky"
@@ -109,10 +104,6 @@
         nextfn #(min (inc (get-current-screen)) (get-final-screen))
         first-page? (= (get-current-screen) 0)
         last-page? (= (get-current-screen) (get-final-screen))
-        style-table-scroll-bar {:style {"position" "sticky"
-                                          "top" "0"
-                                          "backgroundColor" "white"
-                                        "zIndex" "1"}}
         style-hidden {:style {"color" "transparent"}
                       :class "hidden"}
         style-page-to-go {:style {"width" "3em"
@@ -121,11 +112,11 @@
                                        (let [val (int (-> evt .-target .-value))]
                                          (when (and (> val 0)(<= val (+ (get-final-screen) 1)))
                                            (set-current-screen (- val 1)))))]
-    [:tr.row.screen-controls-row (when table-scroll-bar
-                                   style-table-scroll-bar)
-     [:td.cell.screen-controls {:colSpan num-columns}
-      left-bar-content
-      [:div.control.first [:a.control-label (if first-page?
+    [:tr.row.screen-controls-row 
+     [:td.cell.screen-controls {:colSpan num-columns :style {"borderColor" "white"}}
+      [:div.control {:style {"position" "sticky" "left" "1em"}}
+       left-bar-content
+       [:div.control.first [:a.control-label (if first-page?
                                               style-hidden
                                               {:on-click #(set-current-screen 0)})
                            rr-content]]
@@ -143,13 +134,16 @@
                                               {:on-click #(set-current-screen (get-final-screen))})
                            ff-content]]
       [:span.go-to "Go to"]
-      [:input.page-to-go (assoc style-page-to-go :on-change on-change-page-to-go)]
+      [:input.page-to-go (assoc style-page-to-go :on-change on-change-page-to-go)]]
       right-bar-content]]))
 
 (defn generate-theads
   "generate the table headers"
   [controls paging-controls SORT FILTER table-id]
-  [:thead
+  [:thead {:style {"position" "sticky"
+                   "top" "0"
+                   "backgroundColor" "white"
+                   "zIndex" "1"}}
    (when (:paging controls)
      (render-screen-controls paging-controls (:table-scroll-bar controls)))
    (render-header-fields controls SORT FILTER table-id)])
@@ -281,7 +275,8 @@
                          "display" "block"
                          "overflowY" "scroll"
                          "overflowX" "scroll"
-                         "marginBottom" "3em"}
+                         "marginBottom" "3em"
+                         "borderCollapse" "separate"}
             entries (curate-entries paging-controls entries SORT FILTER)]      
         [:table.table (assoc {:id table-id} :style (when (:table-scroll-bar controls)
                         style-table))

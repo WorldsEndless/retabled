@@ -17,7 +17,6 @@
              If set to :click-to-filter, makes values searchable by clicking them"
     :filter-in-url "If false turns off filtering in url for the column, by default true"}])
 
-
 (def control-map-help
   "The possible values of a control-map for a table, which should be a
   sequence of maps where each map corresponds to one column of the table."
@@ -56,25 +55,36 @@
 
 (defn ^{:private true} render-header-fields
   [controls SORT FILTER table-id]
-  (into [:tr.table-headers.row (when (:table-scroll-bar controls)
-                                 {:style {"position" "sticky"
-                                          "zIndex" "1"
-                                          "top" (if (:paging controls) "2em" "0")
-                                          "backgroundColor" "white"}})]
-        (for [c (:columns controls)
-              :let [h  (cond->> (:headline c)
-                         (:sort c) (sort/gen-sort c SORT))
-                    fi (when (:filter c) (filter/gen-filter c FILTER table-id (:filter-in-url controls)))]]
-          [:th (assoc-in (if (and (get-in controls [:table-scroll-bar :first?]) (= c (first (:columns controls))))
-                           {:style {"position" "sticky"
-                                    "left" "0"
-                                    "backgroundColor" "white"}}
-                           (if (and (get-in controls [:table-scroll-bar :last?]) (= c (last (:columns controls))))
-                             {:style {"position" "sticky"
-                                      "right" "0"
-                                      "backgroundColor" "white"}}))
-                         [:style "backgroundColor"]
-                         "white") fi h])))
+  (let [style-table-scroll-bar {:style {"position" "sticky"
+                                        "top" (if (:paging controls) "2em" "0")
+                                        "backgroundColor" "white"
+                                        "zIndex" "1"}}]
+    (into [:tr.table-headers.row (when (:table-scroll-bar controls)
+                                   style-table-scroll-bar)]
+          (for [c (:columns controls)
+                :let [h  (cond->> (:headline c)
+                           (:sort c) (sort/gen-sort c SORT))
+                      fi (when (:filter c) (filter/gen-filter c FILTER table-id (:filter-in-url controls)))
+                      style-first-column-fixed {:style {"position" "sticky"
+                                                        "left" "0"
+                                                        "backgroundColor" "white"}}
+                      style-last-column-fixed {:style {"position" "sticky"
+                                                       "right" "0"
+                                                       "backgroundColor" "white"}}
+                      first-column-and-first-is-fixed? (fn [column] (and (= column (first (:columns controls))) (get-in controls [:table-scroll-bar :first?])))
+                      last-column-and-last-is-fixed? (fn [column] (and (= column (last (:columns controls))) (get-in controls [:table-scroll-bar :last?])))
+                      currently-sorted-or-filtered? (fn [column] (or (and (:selected @SORT)(= (:sortfn column) (:selected @SORT)))
+                                                                     (= (:valfn column) (:selected @SORT))
+                                                                     (> (count (get-in @FILTER [(:valfn column) :value])) 0)))
+                      style-th (assoc-in (if (first-column-and-first-is-fixed? c)
+                                           style-first-column-fixed
+                                           (if (last-column-and-last-is-fixed? c)
+                                             style-last-column-fixed))
+                                         [:style "backgroundColor"]
+                                         (if (currently-sorted-or-filtered? c)
+                                           "rgb(240, 240, 240)"
+                                           "white"))]]
+            [:th style-th fi h]))))
 
 (defn ^{:private true} render-screen-controls
   "Render the controls to edit this screen for results"
@@ -96,26 +106,44 @@
    table-scroll-bar]
   (let [current-screen-for-display (inc (get-current-screen))
         prevfn #(max (dec (get-current-screen)) 0)
-        nextfn #(min (inc (get-current-screen)) (get-final-screen))]
-    [:tr.row.screen-controls-row (when table-scroll-bar
-                                 {:style {"position" "sticky"
+        nextfn #(min (inc (get-current-screen)) (get-final-screen))
+        first-page? (= (get-current-screen) 0)
+        last-page? (= (get-current-screen) (get-final-screen))
+        style-table-scroll-bar {:style {"position" "sticky"
                                           "top" "0"
                                           "backgroundColor" "white"
-                                          "zIndex" "9999"}})
-     [:td.cell.screen-controls {:colSpan num-columns}
-      left-bar-content
-      [:div.control.first [:a.control-label {:on-click #(set-current-screen 0)} rr-content]]
-      [:div.control.prev [:a.control-label {:on-click #(set-current-screen (prevfn))} r-content]]
-      [:div.control.current-screen [:span.screen-num current-screen-for-display]]
-      [:div.control.next [:a.control-label {:on-click #(set-current-screen (nextfn))} f-content]]
-      [:div.control.final [:a.control-label {:on-click #(set-current-screen (get-final-screen))} ff-content]]
-      [:span.go-to "Go to"]
-      [:input.page-to-go {:style {"width" "3em"
-                                     "marginLeft" ".5em"}
-                          :on-change (fn [evt]
+                                        "zIndex" "1"}}
+        style-hidden {:style {"color" "transparent"}
+                      :class "hidden"}
+        style-page-to-go {:style {"width" "3em"
+                                  "marginLeft" ".5em"}}
+        on-change-page-to-go (fn [evt]
                                        (let [val (int (-> evt .-target .-value))]
                                          (when (and (> val 0)(<= val (+ (get-final-screen) 1)))
-                                           (set-current-screen (- val 1)))))}]
+                                           (set-current-screen (- val 1)))))]
+    [:tr.row.screen-controls-row (when table-scroll-bar
+                                   style-table-scroll-bar)
+     [:td.cell.screen-controls {:colSpan num-columns}
+      left-bar-content
+      [:div.control.first [:a.control-label (if first-page?
+                                              style-hidden
+                                              {:on-click #(set-current-screen 0)})
+                           rr-content]]
+      [:div.control.prev [:a.control-label (if first-page?
+                                             style-hidden
+                                             {:on-click #(set-current-screen (prevfn))})
+                          r-content]]
+      [:div.control.current-screen [:span.screen-num current-screen-for-display]]
+      [:div.control.next [:a.control-label (if last-page?
+                                             style-hidden
+                                             {:on-click #(set-current-screen (nextfn))})
+                          f-content]]
+      [:div.control.final [:a.control-label (if last-page?
+                                              style-hidden
+                                              {:on-click #(set-current-screen (get-final-screen))})
+                           ff-content]]
+      [:span.go-to "Go to"]
+      [:input.page-to-go (assoc style-page-to-go :on-change on-change-page-to-go)]
       right-bar-content]]))
 
 (defn generate-theads
@@ -128,29 +156,39 @@
 
 (defn generate-rows
   "Generate all the rows of the table from `entries`, according to `controls`"
-  [controls entries FILTER table-id]
+  [controls entries SORT FILTER table-id]
   (let [{:keys [row-class-fn columns]
          :or {row-class-fn (constantly "row")}} controls]
     (into [:tbody]
           (for [e entries :let [tr ^{:key e} [:tr {:class (row-class-fn e)}]]]
             (into tr
-                  (for [c columns :let [{:keys [valfn css-class-fn displayfn filter]
+                  (for [c columns :let [{:keys [valfn css-class-fn displayfn filter]                                         
                                          :or {css-class-fn (constantly "field")
                                               displayfn identity}} c
                                         arg-map (cond-> {:class (css-class-fn e)}
                                                   (= filter :click-to-filter) (assoc :on-click (filter/on-click-filter c table-id (:filter-in-url controls) FILTER (filter/resolve-filter c e)))
-                                                  (= filter :click-to-filter) (assoc :class (str (css-class-fn e) " click-to-filter")))]]
-                    ^{:key c} [:td.cell (assoc-in (if (and (get-in controls [:table-scroll-bar :first?]) (= c (first columns)))
-                                                    (assoc arg-map :style {"position" "sticky"
-                                                                           "left" "0"
-                                                                           "backgroundColor" "white"})
-                                                    (if (and (get-in controls [:table-scroll-bar :last?]) (= c (last columns)))
-                                                      (assoc arg-map :style {"position" "sticky"
-                                                                             "right" "0"
-                                                                             "backgroundColor" "white"})
-                                                      arg-map))
-                                                  [:style "backgroundColor"]
-                                                  "white")
+                                                  (= filter :click-to-filter) (assoc :class (str (css-class-fn e) " click-to-filter")))
+                                                  style-first-column-fixed {"position" "sticky"
+                                                       "left" "0"
+                                                                  "backgroundColor" "white"}
+                                        style-last-column-fixed {"position" "sticky"
+                                                         "right" "0"
+                                                                 "backgroundColor" "white"}
+                                        first-column-and-first-is-fixed? (and (= c (first columns)) (get-in controls [:table-scroll-bar :first?]))
+                                        last-column-and-last-is-fixed? (and (= c (last columns)) (get-in controls [:table-scroll-bar :last?]))
+                                        currently-sorted-or-filtered? (or (and (:selected @SORT)(= (:sortfn c) (:selected @SORT)))
+                                                (= valfn (:selected @SORT))
+                                                (> (count (get-in @FILTER [valfn :value])) 0))
+                                        cell-style-and-arg-map (assoc-in (if first-column-and-first-is-fixed?
+                                (assoc arg-map :style style-first-column-fixed)
+                                (if last-column-and-last-is-fixed?
+                                  (assoc arg-map :style style-last-column-fixed)
+                                  arg-map))
+                              [:style "backgroundColor"]
+                              (if currently-sorted-or-filtered?
+                                "rgb(240, 240, 240)"
+                                "white"))]]
+                    ^{:key c} [:td.cell cell-style-and-arg-map
                                (-> e valfn displayfn)]))))))
 
 (def DEFAULT-PAGE-ATOM (atom {:current-screen 0
@@ -237,17 +275,16 @@
 
                                   :no-paging
                                   nil)
-            entries (curate-entries paging-controls entries SORT FILTER)]
-        [:table.table {:id table-id
-                       :style (when (:table-scroll-bar controls)
-                                {"height" "28em"
-                                 "width" "fit-content"
-                                 "maxWidth" "100%"
-                                 "display" "block"
-                                 "overflowY" "scroll"
-                                 "overflowX" "scroll"
-                                 "marginBottom" "3em"})}
-
-
+            style-table {"height" "28em"
+                         "width" "fit-content"
+                         "maxWidth" "100%"
+                         "display" "block"
+                         "overflowY" "scroll"
+                         "overflowX" "scroll"
+                         "marginBottom" "3em"}
+            entries (curate-entries paging-controls entries SORT FILTER)]      
+        [:table.table (assoc {:id table-id} :style (when (:table-scroll-bar controls)
+                        style-table))
          [generate-theads controls paging-controls SORT FILTER table-id]
-         [generate-rows controls entries FILTER table-id]]))))
+         [generate-rows controls entries SORT FILTER table-id]]))))
+

@@ -11,6 +11,10 @@ table td.click-to-filter:hover {
   text-decoration: underline;
 }
 
+a.hidden {
+  cursor: default;
+}
+
 body .sorting-by-this.descending:after {
   content: "▲";
 }

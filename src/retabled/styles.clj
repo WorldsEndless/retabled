@@ -23,4 +23,5 @@
   [:table
    [:td.click-to-filter {:cursor :pointer}
     [:&:hover {:text-decoration :underline}]]]
+  [:a.hidden {:cursor "default"}]
   sort-directions)

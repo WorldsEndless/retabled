@@ -79,7 +79,7 @@
                                          (if (currently-sorted-or-filtered? c)
                                            "rgb(240, 240, 240)"
                                            "white"))]]
-            [:th style-th fi h]))))
+            [:th style-th fi h])))
 
 (defn ^{:private true} render-screen-controls
   "Render the controls to edit this screen for results"

@@ -41,7 +41,8 @@
             :left-bar-content [:div.whatever "Stuff before the controls"]
             :right-bar-content [:div.whatever "Stuff after the controls"]}
    :table-scroll-bar {:fixed-columns {:first? "If truthy, the first column of the table will be fixed/sticky"
-                                      :last? "If truthy, the last column of the table will be fixed/sticky"}}})
+                                      :last? "If truthy, the last column of the table will be fixed/sticky"
+                                      :table-color "Changes default values for the background colors to match different colored tables"}}})
 
 (def PAGING (atom {:per-screen 10
                    :current-screen 0
@@ -60,12 +61,13 @@
               :let [h  (cond->> (:headline c)
                          (:sort c) (sort/gen-sort c SORT))
                     fi (when (:filter c) (filter/gen-filter c FILTER table-id (:filter-in-url controls)))
+                    table-color (get-in controls [:table-scroll-bar :table-color] "white")
                     style-first-column-fixed {:style {"position" "sticky"
                                                         "left" "0"
-                                                        "backgroundColor" "white"}}
+                                                        "backgroundColor" table-color}}
                       style-last-column-fixed {:style {"position" "sticky"
                                                        "right" "0"
-                                                       "backgroundColor" "white"}}
+                                                       "backgroundColor" table-color}}
                       first-column-and-first-is-fixed? (fn [column] (and (= column (first (:columns controls))) (get-in controls [:table-scroll-bar :first?])))
                       last-column-and-last-is-fixed? (fn [column] (and (= column (last (:columns controls))) (get-in controls [:table-scroll-bar :last?])))
                       currently-sorted-or-filtered? (fn [column] (or (and (:selected @SORT)(= (:sortfn column) (:selected @SORT)))
@@ -78,7 +80,7 @@
                                          [:style "backgroundColor"]
                                          (if (currently-sorted-or-filtered? c)
                                            "rgb(240, 240, 240)"
-                                           "white"))]]
+                                           table-color))]]
             [:th style-th fi h])))
 
 (defn ^{:private true} render-screen-controls
@@ -111,9 +113,10 @@
         on-change-page-to-go (fn [evt]
                                        (let [val (int (-> evt .-target .-value))]
                                          (when (and (> val 0)(<= val (+ (get-final-screen) 1)))
-                                           (set-current-screen (- val 1)))))]
+                                           (set-current-screen (- val 1)))))
+        table-color (:table-color table-scroll-bar "white")]
     [:tr.row.screen-controls-row 
-     [:td.cell.screen-controls {:colSpan num-columns :style {"borderColor" "white"}}
+     [:td.cell.screen-controls {:colSpan num-columns :style {"borderColor" table-color}}
       [:div.control {:style {"position" "sticky" "left" "1em"}}
        left-bar-content
        [:div.control.first [:a.control-label (if first-page?
@@ -140,19 +143,21 @@
 (defn generate-theads
   "generate the table headers"
   [controls paging-controls SORT FILTER table-id]
-  [:thead {:style {"position" "sticky"
-                   "top" "0"
-                   "backgroundColor" "white"
-                   "zIndex" "1"}}
-   (when (:paging controls)
-     (render-screen-controls paging-controls (:table-scroll-bar controls)))
-   (render-header-fields controls SORT FILTER table-id)])
+  (let [table-color (get-in controls [:table-scroll-bar :table-color] "white")]
+    [:thead {:style {"position" "sticky"
+                     "top" "0"
+                     "backgroundColor" table-color
+                     "zIndex" "1"}}
+     (when (:paging controls)
+       (render-screen-controls paging-controls (:table-scroll-bar controls)))
+     (render-header-fields controls SORT FILTER table-id)]))
 
 (defn generate-rows
   "Generate all the rows of the table from `entries`, according to `controls`"
   [controls entries SORT FILTER table-id]
   (let [{:keys [row-class-fn columns]
-         :or {row-class-fn (constantly "row")}} controls]
+         :or {row-class-fn (constantly "row")}} controls
+        table-color (get-in controls [:table-scroll-bar :table-color] "white")]
     (into [:tbody]
           (for [e entries :let [tr ^{:key e} [:tr {:class (row-class-fn e)}]]]
             (into tr
@@ -164,10 +169,10 @@
                                                   (= filter :click-to-filter) (assoc :class (str (css-class-fn e) " click-to-filter")))
                                                   style-first-column-fixed {"position" "sticky"
                                                        "left" "0"
-                                                                  "backgroundColor" "white"}
+                                                                  "backgroundColor" table-color}
                                         style-last-column-fixed {"position" "sticky"
                                                          "right" "0"
-                                                                 "backgroundColor" "white"}
+                                                                 "backgroundColor" table-color}
                                         first-column-and-first-is-fixed? (and (= c (first columns)) (get-in controls [:table-scroll-bar :first?]))
                                         last-column-and-last-is-fixed? (and (= c (last columns)) (get-in controls [:table-scroll-bar :last?]))
                                         currently-sorted-or-filtered? (or (and (:selected @SORT)(= (:sortfn c) (:selected @SORT)))
@@ -181,7 +186,7 @@
                               [:style "backgroundColor"]
                               (if currently-sorted-or-filtered?
                                 "rgb(240, 240, 240)"
-                                "white"))]]
+                                table-color))]]
                     ^{:key c} [:td.cell cell-style-and-arg-map
                                (-> e valfn displayfn)]))))))
 
